@@ -26,12 +26,14 @@ This repository provides a **starting point** for building:
 Core/                               # main.c, freertos.c templates
 Drivers/                            # STM32F4 HAL drivers
 Middlewares/                        # FreeRTOS kernel + headers
-CMake/                              # CubeMX CMake helper files
+cmake/                              # CubeMX CMake helper files
+CMakeLists.txt                      # CMake list 
 build/                              # CMake output (ignored)
-README.md                           # Project overview
 RFID_access_control_system.ioc      # CubeMX project
 startup_stm32f411xe.s               # MCU startup file
 STM32F411XX_FLASH.ld                # Linker script
+README.md                           # Project overview
+LICENSE                             # MIT License
 ```
 
 ---
