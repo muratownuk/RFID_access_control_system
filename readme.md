@@ -4,7 +4,7 @@
 This is the initial CubeMX + FreeRTOS skeleton for an RFID-based access control system using the STM32F411RE Nucleo-64 board.  
 
 This repository provides a **starting point** for building:  
-- RFID SPI communication with MFRC522  
+- RFID SPI communication with RFID-RC522  
 - FreeRTOS-based multitasking  
 - LED heartbeat and debug via USART2  
 - Incremental development toward a full access control system
