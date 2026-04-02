@@ -20,8 +20,6 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "spi.h"
-#include "stm32_hal_legacy.h"
-#include "stm32f4xx_hal_gpio.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
