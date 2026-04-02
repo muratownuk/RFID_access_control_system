@@ -17,24 +17,23 @@ This repository provides a **starting point** for building:
   - FreeRTOS enabled with default task templates  
 - Project compiles successfully with CMake  
 - Scheduler is running (`osKernelStart()`)  
-- No functional tasks yet (heartbeat LED, RFID task, and SPI not implemented)
+- No functional tasks yet (RFID task, and SPI not implemented)
 
 ---
 
 ## Project Structure 
-```
-Core/                               # main.c, freertos.c templates
-Drivers/                            # STM32F4 HAL drivers
-Middlewares/                        # FreeRTOS kernel + headers
-cmake/                              # CubeMX CMake helper files
-CMakeLists.txt                      # CMake list 
-build/                              # CMake output (ignored)
-RFID_access_control_system.ioc      # CubeMX project
-startup_stm32f411xe.s               # MCU startup file
-STM32F411XX_FLASH.ld                # Linker script
-README.md                           # Project overview
-LICENSE                             # MIT License
-```
+- `Core/`                               # main.c, freertos.c 
+- `Drivers/`                            # STM32F4 HAL drivers
+- `Middlewares/`                        # FreeRTOS kernel + headers
+- `cmake/`                              # CubeMX CMake helper files
+- `CMakeLists.txt`                      # CMake list 
+- `build/`                              # CMake output (ignored)
+- `RFID_access_control_system.ioc`      # CubeMX project
+- `startup_stm32f411xe.s`               # MCU startup file
+- `STM32F411XX_FLASH.ld`                # Linker script
+- `README.md`                           # Project overview
+- `LICENSE`                             # MIT License
+
 
 ---
 
@@ -57,6 +56,18 @@ cmake --build .
 # Flash using ST-Link
 st-flash write build/RFID_access_control_system.bin 0x8000000
 
-# Or just build via Start Debugging in Visual Studio Code, choosing 
-# STM32Cube: STM32 Launch STLink GDB Server 
 ```
+### Using Visual Studio Code 
+- Open project folder in VSCode
+- Use CMake extension to configure and build 
+- Flash via ST-Link (start debugging choosing STM32Cube: STM32 Launch STLink 
+  GDB Server)
+
+## Next Steps 
+- [x] Add PB7 LED heartbeat task using FreeRTOS
+- [x] Add USART2 debug prints
+- [ ] Implement MFRC522 SPI driver
+- [ ] Create IRQ-based RFID reading task
+- [ ] Implement key fob authentication logic
+- [ ] Update documentation with wiring diagrams and task flow
+
