@@ -66,7 +66,7 @@ st-flash write build/RFID_access_control_system.bin 0x8000000
 ## Next Steps 
 - [x] Add PB7 LED heartbeat task using FreeRTOS
 - [x] Add USART2 debug prints
-- [ ] Implement MFRC522 SPI driver
+- [ ] Implement RFID-RC522 SPI driver
 - [ ] Create IRQ-based RFID reading task
 - [ ] Implement key fob authentication logic
 - [ ] Update documentation with wiring diagrams and task flow
