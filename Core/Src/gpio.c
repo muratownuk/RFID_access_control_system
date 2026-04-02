@@ -61,8 +61,8 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : RFID_RC522_IRQ_Pin */
   GPIO_InitStruct.Pin = RFID_RC522_IRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(RFID_RC522_IRQ_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : OUTPUT_RELAY_Pin LED_STATUS_Pin */
