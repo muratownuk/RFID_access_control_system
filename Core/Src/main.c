@@ -20,6 +20,8 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "spi.h"
+#include "stm32_hal_legacy.h"
+#include "stm32f4xx_hal_gpio.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -27,6 +29,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
+#include <stdint.h>
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -48,6 +52,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+volatile uint8_t rfid_irq_flag=0;
 
 /* USER CODE END PV */
 
@@ -60,6 +65,13 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == RFID_RC522_IRQ_Pin)
+  {
+    rfid_irq_flag=1; 
+  }
+}
 
 /* USER CODE END 0 */
 

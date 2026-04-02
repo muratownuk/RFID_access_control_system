@@ -18,17 +18,16 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include "FreeRTOS.h"
+#include "cmsis_os2.h"
+#include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
-#include "FreeRTOS.h"
-#include "stm32f411xe.h"
-#include "stm32f4xx_hal_gpio.h"
-#include "stm32f4xx_hal_uart.h"
-#include "task.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
+#include <stdint.h>
 
 /* USER CODE END Includes */
 
@@ -49,6 +48,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+extern volatile uint8_t rfid_irq_flag; 
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -123,10 +123,21 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+    /* old heartbeat led 
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
     printf("Tick\r\n");
     
     osDelay(1000);
+    */
+    if (rfid_irq_flag)
+    {
+      rfid_irq_flag = 0;
+
+      printf("Card detected!\r\n");
+      HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
+    } 
+    
+    osDelay(10);  
   }
   /* USER CODE END StartDefaultTask */
 }
