@@ -22,6 +22,7 @@ This repository provides a **starting point** for building:
 ---
 
 ## Project Structure 
+```
 Core/                               # main.c, freertos.c templates
 Drivers/                            # STM32F4 HAL drivers
 Middlewares/                        # FreeRTOS kernel + headers
@@ -31,7 +32,7 @@ README.md                           # Project overview
 RFID_access_control_system.ioc      # CubeMX project
 startup_stm32f411xe.s               # MCU startup file
 STM32F411XX_FLASH.ld                # Linker script
-
+```
 
 ---
 
@@ -56,3 +57,4 @@ st-flash write build/RFID_access_control_system.bin 0x8000000
 
 # Or just build via Start Debugging in Visual Studio Code, choosing 
 # STM32Cube: STM32 Launch STLink GDB Server 
+```
