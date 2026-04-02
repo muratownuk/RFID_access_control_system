@@ -19,12 +19,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
+#include "stm32f411xe.h"
+#include "stm32f4xx_hal_gpio.h"
+#include "stm32f4xx_hal_uart.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "retarget.h"
 
 /* USER CODE END Includes */
 
@@ -114,10 +118,15 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+  printf("RTOS Started\r\n"); 
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+    printf("Tick\r\n");
+    
+    osDelay(1000);
   }
   /* USER CODE END StartDefaultTask */
 }

@@ -24,10 +24,10 @@
 #include "usart.h"
 #include "gpio.h"
 
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
-#include <stdint.h>
+#include "retarget.h"
 
 /* USER CODE END Includes */
 
@@ -49,7 +49,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-extern UART_HandleTypeDef huart2; 
 
 /* USER CODE END PV */
 
@@ -57,7 +56,6 @@ extern UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-int _write(int file, char *ptr, int len); 
 
 /* USER CODE END PFP */
 
@@ -170,11 +168,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-int _write(int file, char *ptr, int len)
-{
-  HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, HAL_MAX_DELAY); 
-  return len;
-}
 
 /* USER CODE END 4 */
 
