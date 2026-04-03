@@ -115,6 +115,9 @@ int main(void)
   {
     uint8_t version = RFID_RC522_ReadReg(0x37);
     printf("RFID-RC522 Software Version: 0x%X\r\n", version);
+    printf("Reg 0x01: 0x%X\r\n", RFID_RC522_ReadReg(0x01));
+    printf("Reg 0x07: 0x%X\r\n", RFID_RC522_ReadReg(0x07));
+    printf("Reg 0x14: 0x%X\r\n", RFID_RC522_ReadReg(0x14));
     HAL_Delay(1000);
   }
   
