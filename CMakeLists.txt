@@ -39,7 +39,9 @@ add_subdirectory(cmake/stm32cubemx)
 
 # user sources
 set(USER_SOURCES
-    Core/Src/retarget.c 
+    Core/Src/retarget.c
+    Core/Src/rfid_rc522.c
+    
 )
 
 # user includes 
