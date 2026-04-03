@@ -39,4 +39,36 @@ uint8_t RFID_RC522_ReadReg(uint8_t reg)
     return rx[1]; // second byte is the data 
 }
 
+void RFID_RC522_Reset(void)
+{
+    // make sure RST is high in start-up 
+    HAL_GPIO_WritePin(RFID_RC522_RST_GPIO_Port, RFID_RC522_RST_Pin, GPIO_PIN_SET);
+    HAL_Delay(1); // allow 1 ms delay for RFID module system stability 
 
+    // pull low to trigger reset
+    HAL_GPIO_WritePin(RFID_RC522_RST_GPIO_Port, RFID_RC522_RST_Pin, GPIO_PIN_RESET);
+    HAL_Delay(1); // 1 ms reset hold
+
+    // release back to high
+    HAL_GPIO_WritePin(RFID_RC522_RST_GPIO_Port, RFID_RC522_RST_Pin, GPIO_PIN_SET);
+    HAL_Delay(50); // wait for module start-up/stabilization
+}
+
+void RFID_RC522_Init(void)
+{
+    // reset module 
+    RFID_RC522_Reset();
+
+    // read RFID module software version register (0x90 or 0x91) 
+    for (uint8_t i=0; i<5; i++)
+    {
+        uint8_t version = RFID_RC522_ReadReg(0x37);
+        printf("RFID-RC522 Software Version: 0x%X\r\n", version);
+        printf("Reg 0x01: 0x%X\r\n", RFID_RC522_ReadReg(0x01));
+        printf("Reg 0x07: 0x%X\r\n", RFID_RC522_ReadReg(0x07));
+        printf("Reg 0x14: 0x%X\r\n", RFID_RC522_ReadReg(0x14));
+        HAL_Delay(1000);
+    }
+
+    // other register configurations (antenna and etc...)
+}

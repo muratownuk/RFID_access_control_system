@@ -109,18 +109,7 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   printf("System Initialized\r\n"); 
-
-  // VersionReg register address 0x37h
-  for (uint8_t i=0; i<5; i++)
-  {
-    uint8_t version = RFID_RC522_ReadReg(0x37);
-    printf("RFID-RC522 Software Version: 0x%X\r\n", version);
-    printf("Reg 0x01: 0x%X\r\n", RFID_RC522_ReadReg(0x01));
-    printf("Reg 0x07: 0x%X\r\n", RFID_RC522_ReadReg(0x07));
-    printf("Reg 0x14: 0x%X\r\n", RFID_RC522_ReadReg(0x14));
-    HAL_Delay(1000);
-  }
-  
+  RFID_RC522_Init();
 
   /* USER CODE END 2 */
 
