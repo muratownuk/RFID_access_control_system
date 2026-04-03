@@ -20,6 +20,8 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "spi.h"
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -29,6 +31,7 @@
 #include "retarget.h"
 #include <stdint.h>
 #include <stdio.h>
+#include "rfid_rc522.h"
 
 /* USER CODE END Includes */
 
@@ -108,6 +111,15 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   printf("System Initialized\r\n"); 
+
+  // VersionReg register address 0x37h
+  for (uint8_t i=0; i<5; i++)
+  {
+    uint8_t version = RFID_RC522_ReadReg(0x37);
+    printf("RFID-RC522 Software Version: 0x%X\r\n", version);
+    HAL_Delay(1000);
+  }
+  
 
   /* USER CODE END 2 */
 
