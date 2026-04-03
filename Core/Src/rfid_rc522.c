@@ -71,4 +71,12 @@ void RFID_RC522_Init(void)
     }
 
     // other register configurations (antenna and etc...)
+
+    /* 
+    There is a problem with the RFID-RC522 module (faulty/clone module). 
+    Reading the registers above should give 0x90/91, 0x00, 0x00, 0x00.
+    What I'm getting, 0xB2, 0x20, 0x21, 0x80. 
+
+    Next step is to try another RFID module that operates properly. 
+    */
 }
