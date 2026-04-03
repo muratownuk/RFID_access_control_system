@@ -77,6 +77,8 @@ void Error_Handler(void);
 #define TCK_GPIO_Port GPIOA
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define RFID_RC522_RST_Pin GPIO_PIN_6
+#define RFID_RC522_RST_GPIO_Port GPIOB
 #define LED_STATUS_Pin GPIO_PIN_7
 #define LED_STATUS_GPIO_Port GPIOB
 
