@@ -78,5 +78,16 @@ void RFID_RC522_Init(void)
     What I'm getting, 0xB2, 0x20, 0x21, 0x80. 
 
     Next step is to try another RFID module that operates properly. 
+
+    Update: 
+        Just got 5 new modules. will try one to see if it fixes the issue.
+    
+    What I'm getting, 0x82, 0x20, 0x21, 0x80.
+    This is possibly another clone of MFRC522. 
+
+    Update:
+        Everything is correct, software version is just different. Registers 
+        are correct values after reset in accordance to the MFRC522 datasheet.
+
     */
 }
