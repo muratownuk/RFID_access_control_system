@@ -26,7 +26,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
+#include "rfid_rc522.h"
 #include <stdint.h>
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -57,6 +59,13 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for RFID_RC522_Task */
+osThreadId_t RFID_RC522_TaskHandle;
+const osThreadAttr_t RFID_RC522_Task_attributes = {
+  .name = "RFID_RC522_Task",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -64,6 +73,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
+void Start_RFID_RC522_Task(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -97,6 +107,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
+  /* creation of RFID_RC522_Task */
+  RFID_RC522_TaskHandle = osThreadNew(Start_RFID_RC522_Task, NULL, &RFID_RC522_Task_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -128,6 +141,7 @@ void StartDefaultTask(void *argument)
     
     osDelay(1000);
     */
+    /* for later use ... 
     if (rfid_irq_flag)
     {
       rfid_irq_flag = 0;
@@ -135,10 +149,62 @@ void StartDefaultTask(void *argument)
       printf("Card detected!\r\n");
       HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
     } 
-    
-    osDelay(10);  
+    */    
+    osDelay(1); 
+
   }
   /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Header_Start_RFID_RC522_Task */
+/**
+* @brief Function implementing the RFID_RC522_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_Start_RFID_RC522_Task */
+void Start_RFID_RC522_Task(void *argument)
+{
+  /* USER CODE BEGIN Start_RFID_RC522_Task */
+  uint8_t tag[5]; // REQA response 2 bytes, ATQA: UID implementation later...
+
+  /* Infinite loop */
+  for(;;)
+  {
+    printf("RFID \r\n");
+
+    if (rfid_irq_flag)
+    {
+      printf("rfid_irq_flag \r\n");
+      rfid_irq_flag = 0; // clear the flag 
+
+      uint8_t status = RFID_RC522_Request(tag);
+
+      switch (status)
+      {
+        case 0: // success
+          printf("Card Detected: ");
+          for (uint8_t i = 0; i < 2; i++) // backLen = 2 bytes for REQA
+            printf("%02X ", tag[i]); 
+          printf("\r\n");
+          break;
+
+        case 1: // timeout / no card
+          printf("RFID Request: Timeout / No Card\r\n");
+          break;
+        
+        case 2: // error
+          printf("RFID Request: Transceive Error\r\n");
+          break;
+
+        default:
+          printf("RFID Request: Unknown Status %d\r\n", status);
+      }
+    }
+    osDelay(1000); // yield to other tasks
+  }
+
+  /* USER CODE END Start_RFID_RC522_Task */
 }
 
 /* Private application code --------------------------------------------------*/
