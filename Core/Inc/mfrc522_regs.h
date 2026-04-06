@@ -102,7 +102,7 @@
 #define ComIEnReg_IdleIEn               0x10
 #define ComIEnReg_RxIEn                 0x20
 #define ComIEnReg_TxIEn                 0x40
-#define ComIEnReg_IRQInv                0x80
+#define ComIEnReg_IRqInv                0x80
 
 // DivIEnReg (0x03) 
 #define DivIEnReg_CRCIEn                0x04

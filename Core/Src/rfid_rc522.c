@@ -120,6 +120,7 @@ static void RFID_RC522_Config(void)
 
     // enable RxIRq and IdleIRq
     tmp = RFID_RC522_ReadReg(ComIEnReg);
+    tmp &= ~ComIEnReg_IRqInv;
     tmp |= ComIEnReg_RxIEn | ComIEnReg_IdleIEn;
     RFID_RC522_WriteReg(ComIEnReg, tmp);
 
@@ -190,8 +191,13 @@ static uint8_t RFID_RC522_Transceive(uint8_t *txData, uint8_t txLen, \
     // command execution 
     RFID_RC522_WriteReg(CommandReg, PCD_TRANSCEIVE);
 
+    printf("BitFramingReg: 0x%02X\r\n", RFID_RC522_ReadReg(BitFramingReg));
+
     // start transmission 
     RFID_RC522_SetBitMask(BitFramingReg, BitFramingReg_StartSend);
+
+    printf("Sending: 0x%02X\r\n", txData[0]); 
+
 
     // wait 
     i = MFRC522_TIMEOUT;
@@ -202,6 +208,14 @@ static uint8_t RFID_RC522_Transceive(uint8_t *txData, uint8_t txLen, \
     } while ((i != 0) && !(n & waitIRq));
 
     RFID_RC522_ClearBitMask(BitFramingReg, BitFramingReg_StartSend);
+
+    uint8_t irq = RFID_RC522_ReadReg(ComIrqReg);
+    printf("IRQ flags: 0x%02X\r\n", irq);
+
+    RFID_RC522_WriteReg(ComIrqReg, 0x7F);
+
+    irq = RFID_RC522_ReadReg(ComIrqReg);
+    printf("IRQ flags: 0x%02X\r\n", irq);
 
     // timed out
     if (i == 0)
