@@ -81,19 +81,13 @@ static void RFID_RC522_Config(void)
     tmp |= TModeReg_TAuto | (0x0D & TModeReg_TPrescaler_HiMask); 
     RFID_RC522_WriteReg(TModeReg, tmp); 
 
-    tmp = RFID_RC522_ReadReg(TPrescalerReg);
-    tmp &= ~TPrescalerReg_TPrescaler_LoMask;
-    tmp |= (0x3E & TPrescalerReg_TPrescaler_LoMask);
+    tmp = 0x3E;
     RFID_RC522_WriteReg(TPrescalerReg, tmp);
 
-    tmp = RFID_RC522_ReadReg(TReloadRegL);
-    tmp &= ~TReloadRegL_TReloadVal_LoMask;
-    tmp |= (0x1E & TReloadRegL_TReloadVal_LoMask);
+    tmp = 0x1E;
     RFID_RC522_WriteReg(TReloadRegL, tmp);
 
-    tmp = RFID_RC522_ReadReg(TReloadRegH);
-    tmp &= ~TReloadRegH_TReloadVal_HiMask;
-    tmp |= (0x00 & TReloadRegH_TReloadVal_HiMask);
+    tmp = 0x00;
     RFID_RC522_WriteReg(TReloadRegH, tmp);
 
     // - CONFIGURE ASK MODULATION - 
