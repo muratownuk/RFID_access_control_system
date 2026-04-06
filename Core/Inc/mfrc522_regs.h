@@ -179,18 +179,18 @@
 #define ModeReg_TxWaitRF                0x20
 #define ModeReg_MSBFirst                0x80
 
-//  TxModeReg (0x12) 
+// TxModeReg (0x12) 
 #define TxModeReg_InvMod                0x08
 #define TxModeReg_TxSpeedMask           0x70
 #define TxModeReg_TxCRCEnable           0x80
 
-//  RxModeReg (0x13) 
+// RxModeReg (0x13) 
 #define RxModeReg_RxMultiple            0x04
 #define RxModeReg_RxNoErr               0x08
 #define RxModeReg_RxSpeedMask           0x70
 #define RxModeReg_RxCRCEnable           0x80
 
-//  TxControlReg (0x14) 
+// TxControlReg (0x14) 
 #define TxControlReg_Tx1RFEn            0x01
 #define TxControlReg_Tx2RFEn            0x02
 #define TxControlReg_Tx1CW              0x04
@@ -200,14 +200,14 @@
 #define TxControlReg_InvTx1RFOn         0x40
 #define TxControlReg_InvTx2RFOn         0x80
 
-//  TxASKReg (0x15) 
+// TxASKReg (0x15) 
 #define TxASKReg_Force100ASK            0x40
 
-//  TxSelReg (0x16) 
+// TxSelReg (0x16) 
 #define TxSelReg_MFOutSelMask           0x0F
 #define TxSelReg_DriverSelMask          0x30
 
-//  RxSelReg (0x17) 
+// RxSelReg (0x17) 
 #define RxSelReg_RxWaitMask             0x3F
 #define RxSelReg_UARTSelMask            0xC0
 
