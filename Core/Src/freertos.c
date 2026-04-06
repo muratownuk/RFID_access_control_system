@@ -59,10 +59,10 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for RFID_RC522_Task */
-osThreadId_t RFID_RC522_TaskHandle;
-const osThreadAttr_t RFID_RC522_Task_attributes = {
-  .name = "RFID_RC522_Task",
+/* Definitions for RFIDProcessTask */
+osThreadId_t RFIDProcessTaskHandle;
+const osThreadAttr_t RFIDProcessTask_attributes = {
+  .name = "RFIDProcessTask",
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
@@ -72,8 +72,8 @@ const osThreadAttr_t RFID_RC522_Task_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
-void Start_RFID_RC522_Task(void *argument);
+void DefaultTask(void *argument);
+void RFID_ProcessTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -105,10 +105,10 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(DefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of RFID_RC522_Task */
-  RFID_RC522_TaskHandle = osThreadNew(Start_RFID_RC522_Task, NULL, &RFID_RC522_Task_attributes);
+  /* creation of RFIDProcessTask */
+  RFIDProcessTaskHandle = osThreadNew(RFID_ProcessTask, NULL, &RFIDProcessTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -120,16 +120,16 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_DefaultTask */
 /**
   * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_DefaultTask */
+void DefaultTask(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN DefaultTask */
   printf("RTOS Started\r\n"); 
 
   /* Infinite loop */
@@ -153,19 +153,19 @@ void StartDefaultTask(void *argument)
     osDelay(1); 
 
   }
-  /* USER CODE END StartDefaultTask */
+  /* USER CODE END DefaultTask */
 }
 
-/* USER CODE BEGIN Header_Start_RFID_RC522_Task */
+/* USER CODE BEGIN Header_RFID_ProcessTask */
 /**
-* @brief Function implementing the RFID_RC522_Task thread.
+* @brief Function implementing the RFIDProcessTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_Start_RFID_RC522_Task */
-void Start_RFID_RC522_Task(void *argument)
+/* USER CODE END Header_RFID_ProcessTask */
+void RFID_ProcessTask(void *argument)
 {
-  /* USER CODE BEGIN Start_RFID_RC522_Task */
+  /* USER CODE BEGIN RFID_ProcessTask */
   uint8_t tag[5]; // REQA response 2 bytes, ATQA: UID implementation later...
 
   /* Infinite loop */
@@ -204,7 +204,7 @@ void Start_RFID_RC522_Task(void *argument)
     osDelay(1000); // yield to other tasks
   }
 
-  /* USER CODE END Start_RFID_RC522_Task */
+  /* USER CODE END RFID_ProcessTask */
 }
 
 /* Private application code --------------------------------------------------*/
