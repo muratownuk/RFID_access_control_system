@@ -49,7 +49,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-extern volatile uint8_t rfid_irq_flag; 
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -59,12 +58,19 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for RFIDPollTask */
+osThreadId_t RFIDPollTaskHandle;
+const osThreadAttr_t RFIDPollTask_attributes = {
+  .name = "RFIDPollTask",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
 /* Definitions for RFIDProcessTask */
 osThreadId_t RFIDProcessTaskHandle;
 const osThreadAttr_t RFIDProcessTask_attributes = {
   .name = "RFIDProcessTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,6 +79,7 @@ const osThreadAttr_t RFIDProcessTask_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void DefaultTask(void *argument);
+void RFID_PollTask(void *argument);
 void RFID_ProcessTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -106,6 +113,9 @@ void MX_FREERTOS_Init(void) {
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(DefaultTask, NULL, &defaultTask_attributes);
+
+  /* creation of RFIDPollTask */
+  RFIDPollTaskHandle = osThreadNew(RFID_PollTask, NULL, &RFIDPollTask_attributes);
 
   /* creation of RFIDProcessTask */
   RFIDProcessTaskHandle = osThreadNew(RFID_ProcessTask, NULL, &RFIDProcessTask_attributes);
@@ -143,16 +153,16 @@ void DefaultTask(void *argument)
   /* USER CODE END DefaultTask */
 }
 
-/* USER CODE BEGIN Header_RFID_ProcessTask */
+/* USER CODE BEGIN Header_RFID_PollTask */
 /**
-* @brief Function implementing the RFIDProcessTask thread.
+* @brief Function implementing the RFIDPollTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_RFID_ProcessTask */
-void RFID_ProcessTask(void *argument)
+/* USER CODE END Header_RFID_PollTask */
+void RFID_PollTask(void *argument)
 {
-  /* USER CODE BEGIN RFID_ProcessTask */
+  /* USER CODE BEGIN RFID_PollTask */
   uint8_t tag[5]; // REQA response 2 bytes, ATQA: UID implementation later...
 
   /* Infinite loop */
@@ -190,7 +200,25 @@ void RFID_ProcessTask(void *argument)
     }
     osDelay(1000); // yield to other tasks
   }
+  /* USER CODE END RFID_PollTask */
+}
 
+/* USER CODE BEGIN Header_RFID_ProcessTask */
+/**
+* @brief Function implementing the RFIDProcessTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_RFID_ProcessTask */
+void RFID_ProcessTask(void *argument)
+{
+  /* USER CODE BEGIN RFID_ProcessTask */
+
+  for(;;)
+  {
+
+    osDelay(1);
+  }
   /* USER CODE END RFID_ProcessTask */
 }
 

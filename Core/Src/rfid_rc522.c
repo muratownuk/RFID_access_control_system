@@ -103,6 +103,10 @@ static void RFID_RC522_Config(void)
     tmp |= ModeReg_TxWaitRF | ModeReg_PolMFin | (0x01 & ModeReg_CRCPresetMask); 
     RFID_RC522_WriteReg(ModeReg, tmp);
 
+    // - CONFIGURE ANTENNA - 
+    // turn antenna on
+    RFID_RC522_AntennaOn();
+
     // - CONFIGURE IRQ - 
     // clear all pending IRQs
     RFID_RC522_WriteReg(ComIrqReg, 0x7F);
@@ -122,10 +126,7 @@ static void RFID_RC522_Config(void)
     RFID_RC522_SetBitMask(FIFOLevelReg, FIFOLevelReg_FlushBuffer);
 
     // set module to idle
-    RFID_RC522_WriteReg(CommandReg, PCD_IDLE);
-
-    // turn antenna on
-    RFID_RC522_AntennaOn();
+    RFID_RC522_WriteReg(CommandReg, PCD_IDLE);   
 }
 
 void RFID_RC522_Reset(void)
@@ -151,6 +152,7 @@ void RFID_RC522_Init(void)
     // read RFID module software version register and key registers 
     printf("RFID-RC522 Software Version: 0x%X\r\n", \
         RFID_RC522_ReadReg(VersionReg));
+    printf("--- Initial register values ---\r\n");
     printf("CommandReg (01h): 0x%X\r\n", RFID_RC522_ReadReg(CommandReg));
     printf("Status1Reg(07h): 0x%X\r\n", RFID_RC522_ReadReg(Status1Reg));
     printf("TxControlReg (0x14): 0x%X\r\n", \
