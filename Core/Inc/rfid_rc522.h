@@ -4,7 +4,6 @@
 #include "stm32f4xx_hal.h"
 
 // function prototypes 
-
 void RFID_RC522_Reset(void);
 void RFID_RC522_AntennaOn(void);
 void RFID_RC522_Init(void);
