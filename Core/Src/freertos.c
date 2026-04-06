@@ -135,23 +135,10 @@ void DefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    /* old heartbeat led 
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
-    printf("Tick\r\n");
+    // heartbeat 
+    HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
     
     osDelay(1000);
-    */
-    /* for later use ... 
-    if (rfid_irq_flag)
-    {
-      rfid_irq_flag = 0;
-
-      printf("Card detected!\r\n");
-      HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
-    } 
-    */    
-    osDelay(1); 
-
   }
   /* USER CODE END DefaultTask */
 }
