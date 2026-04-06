@@ -69,6 +69,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin == RFID_RC522_IRQ_Pin)
   {
     rfid_irq_flag=1; 
+    printf("IRQ callback fired!\r\n"); // debug 
   }
 }
 
@@ -108,8 +109,8 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-  printf("System Initialized\r\n"); 
   RFID_RC522_Init();
+  printf("System Initialized\r\n"); 
 
   /* USER CODE END 2 */
 
