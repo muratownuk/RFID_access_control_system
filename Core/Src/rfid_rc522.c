@@ -1,9 +1,13 @@
 #include "rfid_rc522.h"
+#include "cmsis_os.h"
 #include "cmsis_os2.h"
 #include "main.h"
+#include "retarget.h"
+#include "portmacro.h"
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_def.h"
 #include "stm32f4xx_hal_gpio.h"
+#include "stm32f4xx_hal_pwr.h"
 #include "stm32f4xx_hal_spi.h"
 #include "mfrc522_regs.h"
 #include <stdint.h>
@@ -12,9 +16,10 @@
 extern SPI_HandleTypeDef hspi1;
 
 // private defines
-#define MFRC522_TIMEOUT     1000
-#define REQA_CMD            0x26
-#define MFRC522_ERROR_MASK  0x1B
+#define MFRC522_ERRORMASK   0x1B
+
+// external variables
+extern osSemaphoreId_t RFIDSemHandle;           // created in freertos.c
 
 static void RFID_RC522_WriteReg(uint8_t reg, uint8_t value)
 {
@@ -116,10 +121,10 @@ static void RFID_RC522_Config(void)
     tmp |= DivIEnReg_IRQPushPull;
     RFID_RC522_WriteReg(DivIEnReg, tmp);
 
-    // enable RxIRq and IdleIRq
+    // disable IRqInv and enable RxIRq 
     tmp = RFID_RC522_ReadReg(ComIEnReg);
     tmp &= ~ComIEnReg_IRqInv;
-    tmp |= ComIEnReg_RxIEn | ComIEnReg_IdleIEn;
+    tmp |= ComIEnReg_RxIEn;
     RFID_RC522_WriteReg(ComIEnReg, tmp);
 
     // flush FIFO
@@ -157,20 +162,16 @@ void RFID_RC522_Init(void)
     printf("Status1Reg(07h): 0x%X\r\n", RFID_RC522_ReadReg(Status1Reg));
     printf("TxControlReg (0x14): 0x%X\r\n", \
         RFID_RC522_ReadReg(TxControlReg));
+    printf("--------------------------------\r\n");
     HAL_Delay(1000);
 
-    // configure RFID-RC522 timer and mode 
+    // configure RFID-RC522 
     RFID_RC522_Config();
 
 }
 
-static uint8_t RFID_RC522_Transceive(uint8_t *txData, uint8_t txLen, \
-    uint8_t *rxData, uint8_t *rxLen)
+void RFID_RC522_startTransceive(uint8_t *txData, uint8_t txLen)
 {
-    uint8_t waitIRq = ComIrqReg_RxIRq | ComIrqReg_IdleIRq;
-    uint8_t n;
-    uint32_t i; 
-
     // RFID-RC522 in idle 
     RFID_RC522_WriteReg(CommandReg, PCD_IDLE);
 
@@ -180,79 +181,51 @@ static uint8_t RFID_RC522_Transceive(uint8_t *txData, uint8_t txLen, \
     // flush FIFO buffer 
     RFID_RC522_SetBitMask(FIFOLevelReg, FIFOLevelReg_FlushBuffer);
 
-    // write data to FIFO buffer
-    for (uint8_t j = 0; j < txLen; j++)
-        RFID_RC522_WriteReg(FIFODataReg, txData[j]);
+    // clear & set BitFramingReg TxLastBits
+    RFID_RC522_WriteReg(BitFramingReg, 0x00);
+    RFID_RC522_WriteReg(BitFramingReg, 0x07);
 
-    // command execution 
+    // write data to FIFO buffer
+    for (uint8_t i = 0; i < txLen; i++)
+        RFID_RC522_WriteReg(FIFODataReg, txData[i]);
+
+    // start transceive command
     RFID_RC522_WriteReg(CommandReg, PCD_TRANSCEIVE);
 
-    printf("BitFramingReg: 0x%02X\r\n", RFID_RC522_ReadReg(BitFramingReg));
-
-    // start transmission 
+    // start sending 
     RFID_RC522_SetBitMask(BitFramingReg, BitFramingReg_StartSend);
 
-    printf("Sending: 0x%02X\r\n", txData[0]); 
+    printf("RFID_RC522_startTransceive: starting transceive...\r\n");
+}
 
+uint8_t RFID_RC522_readResponse(uint8_t *rxData, uint8_t *rxLen)
+{
+    uint8_t irq;
+    uint8_t fifoLevel;
 
-    // wait 
-    i = MFRC522_TIMEOUT;
-    do {
-        n = RFID_RC522_ReadReg(ComIrqReg);
-        i--;
-        osDelay(1);
-    } while ((i != 0) && !(n & waitIRq));
-
-    RFID_RC522_ClearBitMask(BitFramingReg, BitFramingReg_StartSend);
-
-    uint8_t irq = RFID_RC522_ReadReg(ComIrqReg);
-    printf("IRQ flags: 0x%02X\r\n", irq);
-
-    RFID_RC522_WriteReg(ComIrqReg, 0x7F);
+    printf("RFID_RC522_readResponse: reading response...\r\n");
 
     irq = RFID_RC522_ReadReg(ComIrqReg);
-    printf("IRQ flags: 0x%02X\r\n", irq);
 
-    // timed out
-    if (i == 0)
-        return 1; 
+    // clear StartSend
+    RFID_RC522_ClearBitMask(BitFramingReg, BitFramingReg_StartSend);
 
-    // error 
-    if (RFID_RC522_ReadReg(ErrorReg) & MFRC522_ERROR_MASK)
-        return 2; 
+    // timeout or error check
+    if(!(irq & ComIrqReg_RxIRq))
+        return 1; // timeout 
 
-    // read received data
-    uint8_t fifoLevel = RFID_RC522_ReadReg(FIFOLevelReg);
+    if(RFID_RC522_ReadReg(ErrorReg) & MFRC522_ERRORMASK)
+        return 2; // error
+
+    // read FIFO
+    fifoLevel = RFID_RC522_ReadReg(FIFOLevelReg) & FIFOLevelReg_LevelMask;
     *rxLen = fifoLevel;
 
-    for (uint8_t j = 0; j < fifoLevel; j++)
-        rxData[j] = RFID_RC522_ReadReg(FIFODataReg);
+    for (uint8_t i = 0; i < *rxLen; i++)
+        rxData[i] = RFID_RC522_ReadReg(FIFODataReg);
 
-    // successful read 
-    return 0; 
+    // clear IRQ flags
+    RFID_RC522_WriteReg(ComIrqReg, 0x7F);
+
+    return 0; // success
 }
-
-uint8_t RFID_RC522_Request(uint8_t *tagType)
-{
-    uint8_t status;
-    uint8_t backLen;
-    uint8_t buffer[2];
-
-    RFID_RC522_WriteReg(BitFramingReg, 0x07 & BitFramingReg_TxLastBitsMask);
-
-    buffer[0] = REQA_CMD; // REQA
-
-    status = RFID_RC522_Transceive(buffer, 1, buffer, &backLen);
-
-    if ((status == 0) && (backLen==2))
-    {
-        tagType[0] = buffer[0];
-        tagType[1] = buffer[1];
-        return status; // card detection 
-    }
-    else
-    {
-        return status; // in case of timeout, error or unknown status
-    }
-}
-

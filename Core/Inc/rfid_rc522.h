@@ -8,6 +8,7 @@ void RFID_RC522_Reset(void);
 void RFID_RC522_AntennaOn(void);
 void RFID_RC522_Init(void);
 
-uint8_t RFID_RC522_Request(uint8_t *tagType);
+void RFID_RC522_startTransceive(uint8_t *txData, uint8_t txLen);
+uint8_t RFID_RC522_readResponse(uint8_t *rxData, uint8_t *rxLen);
 
 #endif
