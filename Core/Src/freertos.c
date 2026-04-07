@@ -19,6 +19,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
+#include "cmsis_os2.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -27,18 +28,26 @@
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
 #include "rfid_rc522.h"
+#include "mfrc522_regs.h"
 #include <stdint.h>
 #include <stdio.h>
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE BEGIN PTD */
+typedef struct{
+  uint8_t uid[5];   // REQA or full UID
+  uint8_t uidLen;   // number of valid bytes
+} RFID_Item_t;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define REQA_CMD                      0x26
+#define RFID_SEM_ACQUIRE_TIMEOUT      1000 // essentially, how fast we polls 
 
 /* USER CODE END PD */
 
@@ -72,6 +81,22 @@ const osThreadAttr_t RFIDProcessTask_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityHigh,
 };
+/* Definitions for xRFIDQueue */
+osMessageQueueId_t xRFIDQueueHandle;
+uint8_t xRFIDQueueBuffer[ 10 * 10 ];
+osStaticMessageQDef_t xRFIDQueueControlBlock;
+const osMessageQueueAttr_t xRFIDQueue_attributes = {
+  .name = "xRFIDQueue",
+  .cb_mem = &xRFIDQueueControlBlock,
+  .cb_size = sizeof(xRFIDQueueControlBlock),
+  .mq_mem = &xRFIDQueueBuffer,
+  .mq_size = sizeof(xRFIDQueueBuffer)
+};
+/* Definitions for RFIDSem */
+osSemaphoreId_t RFIDSemHandle;
+const osSemaphoreAttr_t RFIDSem_attributes = {
+  .name = "RFIDSem"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -98,6 +123,10 @@ void MX_FREERTOS_Init(void) {
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
 
+  /* Create the semaphores(s) */
+  /* creation of RFIDSem */
+  RFIDSemHandle = osSemaphoreNew(1, 0, &RFIDSem_attributes);
+
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -105,6 +134,10 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of xRFIDQueue */
+  xRFIDQueueHandle = osMessageQueueNew (10, 10, &xRFIDQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -140,7 +173,7 @@ void MX_FREERTOS_Init(void) {
 void DefaultTask(void *argument)
 {
   /* USER CODE BEGIN DefaultTask */
-  printf("RTOS Started\r\n"); 
+  
 
   /* Infinite loop */
   for(;;)
@@ -163,42 +196,52 @@ void DefaultTask(void *argument)
 void RFID_PollTask(void *argument)
 {
   /* USER CODE BEGIN RFID_PollTask */
-  uint8_t tag[5]; // REQA response 2 bytes, ATQA: UID implementation later...
+  uint8_t txBuffer[2], rxBuffer[10], rxLen;
+  uint8_t status;
+
+  txBuffer[0] = REQA_CMD;
 
   /* Infinite loop */
   for(;;)
   {
-    printf("RFID \r\n");
 
-    if (rfid_irq_flag)
+    // start REQA transmission 
+    RFID_RC522_startTransceive(txBuffer, 1);
+
+    // wait until ISR (EXTI0 callback) releases semaphore (with timeout)
+    if (osSemaphoreAcquire(RFIDSemHandle, RFID_SEM_ACQUIRE_TIMEOUT) != osOK)
+      continue; // Timeout! Retrying...
+    
+    // read ATQA reception
+    status = RFID_RC522_readResponse(rxBuffer, &rxLen);
+
+    switch (status)
     {
-      printf("rfid_irq_flag \r\n");
-      rfid_irq_flag = 0; // clear the flag 
+      case 0: // success
+        printf("RFID_PollTask: success\r\n");
 
-      uint8_t status = RFID_RC522_Request(tag);
+        printf("rxBuffer: ");
+        for (uint8_t i = 0; i < rxLen; i++)
+          printf("%02X ", rxBuffer[i]);
+        printf("\r\n");
 
-      switch (status)
-      {
-        case 0: // success
-          printf("Card Detected: ");
-          for (uint8_t i = 0; i < 2; i++) // backLen = 2 bytes for REQA
-            printf("%02X ", tag[i]); 
-          printf("\r\n");
-          break;
-
-        case 1: // timeout / no card
-          printf("RFID Request: Timeout / No Card\r\n");
-          break;
-        
-        case 2: // error
-          printf("RFID Request: Transceive Error\r\n");
-          break;
-
-        default:
-          printf("RFID Request: Unknown Status %d\r\n", status);
-      }
+        // push UID/ATQA into queue for RFID_ProcessTask
+        osMessageQueuePut(xRFIDQueueHandle, rxBuffer, 0, 0);
+        break;
+      
+      case 1: // timeout
+        printf("RFID_PollTask: timeout\r\n");
+        break;
+      
+      case 3: // error
+        printf("RFID_PollTask: error\r\n");
+        break;
+      
+      default:
+        printf("RFID_PollTask: unknown error\r\n");
     }
-    osDelay(1000); // yield to other tasks
+    
+    osDelay(50); // delay between polling 
   }
   /* USER CODE END RFID_PollTask */
 }
@@ -213,6 +256,7 @@ void RFID_PollTask(void *argument)
 void RFID_ProcessTask(void *argument)
 {
   /* USER CODE BEGIN RFID_ProcessTask */
+  printf("freeRTOS Started\r\n"); 
 
   for(;;)
   {
