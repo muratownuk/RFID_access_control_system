@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "cmsis_os2.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -70,7 +69,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin == RFID_RC522_IRQ_Pin)
   {
     osSemaphoreRelease(RFIDSemHandle);
-    printf("IRQ callback fired! - RFIDSem released\r\n"); // debug 
+    DEBUG_LOG("IRQ callback fired! - RFIDSem released\r\n"); // debug 
   }
 }
 
