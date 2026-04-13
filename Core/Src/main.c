@@ -69,7 +69,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin == RFID_RC522_IRQ_Pin)
   {
     osSemaphoreRelease(RFIDSemHandle);
-    DEBUG_LOG("IRQ callback fired! - RFIDSem released\r\n"); // debug 
+    DEBUG_LOG1("IRQ callback fired! - RFIDSem released\r\n"); // debug 
   }
 }
 
@@ -110,7 +110,7 @@ int main(void)
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   RFID_RC522_Init();
-  printf("System Initialized\r\n"); 
+  DEBUG_LOG0("System Initialized\r\n");
 
   /* USER CODE END 2 */
 
