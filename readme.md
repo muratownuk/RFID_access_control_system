@@ -15,8 +15,9 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
 - LED heartbeat task for system monitoring
 
 ---
-```
+
 ## System Architecture
+```
     RFID Card Detected
            |
     EXTI Interrupt (IRQ)
@@ -35,6 +36,7 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
            |
    (UID Processing)
 ```
+
 ---
 
 ## Current Status
@@ -75,7 +77,6 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
 - `Core/Inc/`
   - `rfid_rc522.h`                      # RFID-RC522 API + data structures
   - `mfrc522_regs.h`                    # MFRC522 register definitions
-
 
 ---
 
