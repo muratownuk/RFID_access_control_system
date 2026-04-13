@@ -15,7 +15,7 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
 - LED heartbeat task for system monitoring
 
 ---
-
+```
 ## System Architecture
     RFID Card Detected
            |
@@ -34,24 +34,16 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
     RFID App Task
            |
    (UID Processing)
-
+```
 ---
-
-
-- CubeMX project configured with:  
-  - STM32F411RE peripherals (GPIO, USART2 for debug, SPI for RFID)  
-  - FreeRTOS enabled with default task templates  
-- Project compiles successfully with CMake  
-- Scheduler is running (`osKernelStart()`)  
-- No functional tasks yet (RFID task, and SPI not implemented)
 
 ## Current Status
 
-### ✅ Implemented
+### Implemented
 - FreeRTOS scheduler with 3 tasks:
-  - **Default Task** → LED heartbeat
-  - **RFID Driver Task** → Handles polling + anti-collision
-  - **RFID App Task** → Processes and prints RFID data
+  - **Default Task** -> LED heartbeat
+  - **RFID Driver Task** -> Handles polling + anti-collision
+  - **RFID App Task** -> Processes and prints RFID data
 - SPI communication with MFRC522 RFID-RC522
 - IRQ-based event handling using EXTI0
 - REQA command (card detection)
@@ -127,13 +119,16 @@ st-flash write build/RFID_access_control_system.bin 0x8000000
   GDB Server)
 
 ### Example Output (UART) using RealTerm
+```
 System Initialized
 freeRTOS Started
+
 
 ---------- RFID ITEM ----------
 ATQA: 04 00
 UID:  93 A2 1F 7C
 -------------------------------
+```
 
 ## Next Steps 
 - [x] Add PB7 LED heartbeat task using FreeRTOS
