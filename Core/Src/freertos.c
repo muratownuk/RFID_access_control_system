@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
+#include "projdefs.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -55,7 +56,8 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 #define RX_BUF_SIZE                   16
 #define TX_BUF_SIZE                   2
 
-#define RFID_SEM_ACQUIRE_TIMEOUT      1000 // essentially, how fast we polls 
+#define RFID_SEM_ACQUIRE_TIMEOUT      800   // essentially, how fast we poll
+#define RFID_CARD_REMOVE_TIMEOUT      10000
 
 /* USER CODE END PD */
 
@@ -113,7 +115,6 @@ void RFID_RC522_resetTxRxBuf(uint8_t *txBuf, uint8_t *rxBuf);
 RFID_Status_t RFID_RC522_poll(uint8_t *txBuf, uint8_t *rxBuf, uint8_t *rxLen);
 RFID_Status_t RFID_RC522_antiColl(uint8_t *txBuf, uint8_t *rxBuf, \
   uint8_t *rxLen);
-
 
 /* USER CODE END FunctionPrototypes */
 
@@ -210,6 +211,12 @@ void DefaultTask(void *argument)
 void RFID_DriverTask(void *argument)
 {
   /* USER CODE BEGIN RFID_DriverTask */
+  static uint8_t lastUID[10] = {0};
+  static uint8_t lastUIDLen = 0;
+  
+  static uint32_t lastSeenTick = 0, now;
+  static uint8_t cardPresent = 0;
+
   uint8_t txBuffer[TX_BUF_SIZE], rxBuffer[RX_BUF_SIZE], rxLen;
   uint8_t status;
   RFID_Item_t rfidItem_QSend;
@@ -217,7 +224,6 @@ void RFID_DriverTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-
     // reset Tx & Rx buffer before polling
     RFID_RC522_resetTxRxBuf(txBuffer, rxBuffer);
     
@@ -233,7 +239,14 @@ void RFID_DriverTask(void *argument)
         memset(&rfidItem_QSend, 0, sizeof(rfidItem_QSend));
 
         // put ATQA in RFID Item
-        memcpy(rfidItem_QSend.atqa, rxBuffer, rxLen);
+        if (rxLen == 2)
+          memcpy(rfidItem_QSend.atqa, rxBuffer, rxLen);
+        else
+        {
+          DEBUG_LOG1("RFID_RC522_poll: ATQA length error\r\n");
+          osDelay(200);
+          continue;
+        }
 
         // reset Tx & Rx buffer before anticollision
         RFID_RC522_resetTxRxBuf(txBuffer, rxBuffer);
@@ -245,15 +258,31 @@ void RFID_DriverTask(void *argument)
           case RFID_OK: // success
             DEBUG_LOG1("RFID_RC522_antiColl: success\r\n");
 
+            lastSeenTick = xTaskGetTickCount();
+            cardPresent = 1;
+
             // copy UID and its length
             memcpy(rfidItem_QSend.uid, rxBuffer, rxLen);
             rfidItem_QSend.uidLen = rxLen;
 
-            // put rfidItem_QSend in RFIDQueue
-            if (osMessageQueuePut(xRFIDQueueHandle, &rfidItem_QSend, 0, 0) != osOK)
-              DEBUG_LOG1("RFID_DriverTask: Error: RFIDQueue Full...");
-            break;
-
+            // duplicate filter
+            if ((rfidItem_QSend.uidLen == lastUIDLen) && (memcmp(rfidItem_QSend.uid, lastUID, lastUIDLen) == 0))
+            {
+              // same tag... ignore
+              break;
+            }
+            else
+            {
+              memcpy(lastUID, rfidItem_QSend.uid, rfidItem_QSend.uidLen);
+              lastUIDLen = rfidItem_QSend.uidLen;
+              
+              // put rfidItem_QSend in RFIDQueue
+              if (osMessageQueuePut(xRFIDQueueHandle, &rfidItem_QSend, 0, 0) != osOK)
+                DEBUG_LOG1("RFID_DriverTask: Error: RFIDQueue Full...");
+              
+              break;
+            }
+            
           case RFID_ERR_ANTICOLL_SEM_TIMEOUT: // antiColl timeout
             DEBUG_LOG1("RFID_RC522_antiColl: RFIDSem timeout\r\n");
             break;
@@ -289,8 +318,22 @@ void RFID_DriverTask(void *argument)
     } // switch poll status
 
     // TODO: implement SELECT + SAK to complete UID Selection (ISO 14443A)
+    // realized it is not necessary for this application.
 
-    osDelay(50); // delay between polling 
+    osDelay(200); // delay between polling 
+
+    now = xTaskGetTickCount();
+
+    if (cardPresent && ((now - lastSeenTick) > \
+    pdMS_TO_TICKS(RFID_CARD_REMOVE_TIMEOUT)))
+    {
+      DEBUG_LOG1("Card removed\r\n");
+
+      cardPresent = 0;
+      memset(lastUID, 0, sizeof(lastUID));
+      lastUIDLen = 0;
+    }
+
   }
 
   /* USER CODE END RFID_DriverTask */
@@ -379,11 +422,8 @@ RFID_Status_t RFID_RC522_antiColl(uint8_t *txBuf, uint8_t *rxBuf, \
        
     status = RFID_RC522_readResponse(tmpBuf, &tmpLen);
 
-    //if (status != 0 || tmpLen != 5) // we're expecting 4-bytes UID 1-byte BCC
-    if (status != 0)
+    if (status != RFID_OK || tmpLen != 5) // expected: 4-bytes UID; 1-byte BCC
       return RFID_ERR_ANTICOLL_RX;
-
-    DEBUG_LOG3("AntiColl len: %d\r\n", tmpLen); // debug
     
     // BCC check
     bcc = tmpBuf[0] ^ tmpBuf [1] ^ tmpBuf[2] ^ tmpBuf[3];
@@ -406,6 +446,9 @@ RFID_Status_t RFID_RC522_antiColl(uint8_t *txBuf, uint8_t *rxBuf, \
       break;
     }
   }
+
+  if (uidIndex == 0)
+    return RFID_ERR_ANTICOLL_RX;
 
   *rxLen = uidIndex;
 
