@@ -57,7 +57,10 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 #define TX_BUF_SIZE                   2
 
 #define RFID_SEM_ACQUIRE_TIMEOUT      800   // essentially, how fast we poll
-#define RFID_CARD_REMOVE_TIMEOUT      10000
+#define RFID_DEFAULT_TASK_DELAY       1000
+#define RFID_DRIVER_TASK_DELAY        200
+#define RFID_APP_TASK_DELAY           100
+#define RFID_CARD_REMOVE_TIMEOUT      2500
 
 /* USER CODE END PD */
 
@@ -196,7 +199,7 @@ void DefaultTask(void *argument)
     // heartbeat 
     HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
     
-    osDelay(1000);
+    osDelay(RFID_DEFAULT_TASK_DELAY);
   }
   /* USER CODE END DefaultTask */
 }
@@ -244,7 +247,7 @@ void RFID_DriverTask(void *argument)
         else
         {
           DEBUG_LOG1("RFID_RC522_poll: ATQA length error\r\n");
-          osDelay(200);
+          osDelay(RFID_DRIVER_TASK_DELAY);
           continue;
         }
 
@@ -320,14 +323,14 @@ void RFID_DriverTask(void *argument)
     // TODO: implement SELECT + SAK to complete UID Selection (ISO 14443A)
     // realized it is not necessary for this application.
 
-    osDelay(200); // delay between polling 
+    osDelay(RFID_DRIVER_TASK_DELAY); // delay between polling 
 
     now = xTaskGetTickCount();
 
     if (cardPresent && ((now - lastSeenTick) > \
     pdMS_TO_TICKS(RFID_CARD_REMOVE_TIMEOUT)))
     {
-      DEBUG_LOG1("Card removed\r\n");
+      DEBUG_LOG0("Card removed.\r\n");
 
       cardPresent = 0;
       memset(lastUID, 0, sizeof(lastUID));
@@ -359,6 +362,7 @@ void RFID_AppTask(void *argument)
     osMessageQueueGet(xRFIDQueueHandle, &rfidItem_QRecv, 0, osWaitForever);
 
     // print rfidItem
+    DEBUG_LOG0("Card Detected!\r\n");
     DEBUG_LOG0("---------- RFID ITEM ----------\r\n");
     DEBUG_LOG0("ATQA: ");
     for (uint8_t i = 0; i < RFID_ATQA_LEN; i++)
@@ -373,7 +377,7 @@ void RFID_AppTask(void *argument)
 
     // TODO: authentication logic
 
-    osDelay(100);
+    osDelay(RFID_APP_TASK_DELAY);
   }
   /* USER CODE END RFID_AppTask */
 }
