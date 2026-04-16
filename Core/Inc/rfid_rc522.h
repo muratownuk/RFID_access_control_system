@@ -7,8 +7,9 @@
 // defines
 #define RFID_MAX_UID_LEN    10
 #define RFID_ATQA_LEN       2
-#define PADDING_LEN         3 
+#define PADDING_LEN         2 
 
+// - TYPEDEFS - 
 // typedef enum
 typedef enum {
   RFID_OK = 0,
@@ -20,15 +21,21 @@ typedef enum {
   RFID_ERR_ANTICOLL_BCC
 } RFID_Status_t;
 
+typedef enum {
+  RFID_ITEM_REMOVED = 0,
+  RFID_ITEM_PRESENT
+} RFID_ItemEvent_t;
+
 // typedef struct 
-typedef struct{
-  uint8_t uid[RFID_MAX_UID_LEN];    // full UID
-  uint8_t uidLen;                   // number of valid bytes
+typedef struct {
   uint8_t atqa[RFID_ATQA_LEN];      // ATQA (2 bytes)
+  uint8_t event;                    // item present/removed
+  uint8_t uidLen;                   // number of valid bytes
+  uint8_t uid[RFID_MAX_UID_LEN];    // full UID
   uint8_t padding[PADDING_LEN];     // pad RFID_Item_t so its 16 bytes
 } RFID_Item_t;
 
-// function prototypes 
+// - FUNCTION PROTOTYPES -  
 void RFID_RC522_Reset(void);
 void RFID_RC522_AntennaOn(void);
 void RFID_RC522_Init(void);

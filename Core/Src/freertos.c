@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
+#include "portmacro.h"
 #include "projdefs.h"
 #include "task.h"
 #include "main.h"
@@ -44,6 +45,28 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+// debug mode (uncomment)
+//#define DEBUG_MODE
+
+#ifdef DEBUG_MODE
+  #define RFID_POLL_PERIOD            1000
+  #define RFID_SEM_ACQUIRE_TIMEOUT    800
+#else
+  #define RFID_POLL_PERIOD            200
+  #define RFID_SEM_ACQUIRE_TIMEOUT    50
+#endif
+
+// timeouts and delays 
+#define RFID_DEFAULT_TASK_DELAY       1000
+#define RFID_APP_TASK_DELAY           100
+#define RFID_ITEM_REMOVE_TIMEOUT      2500
+
+// tx/rx buf sizes
+#define RX_BUF_SIZE                   16
+#define TX_BUF_SIZE                   2
+
+// tx commands
 #define REQA_CMD                      0x26
 #define REQA_TXLASTBITS               0x07
 #define ANTICOLL_CMD                  0x20
@@ -52,15 +75,6 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 #define CASCADE_LEVEL_2               0x95
 #define CASCADE_LEVEL_3               0x97
 #define CASCADE_TAG                   0x88
-
-#define RX_BUF_SIZE                   16
-#define TX_BUF_SIZE                   2
-
-#define RFID_SEM_ACQUIRE_TIMEOUT      800   // essentially, how fast we poll
-#define RFID_DEFAULT_TASK_DELAY       1000
-#define RFID_DRIVER_TASK_DELAY        200
-#define RFID_APP_TASK_DELAY           100
-#define RFID_CARD_REMOVE_TIMEOUT      2500
 
 /* USER CODE END PD */
 
@@ -214,11 +228,14 @@ void DefaultTask(void *argument)
 void RFID_DriverTask(void *argument)
 {
   /* USER CODE BEGIN RFID_DriverTask */
+  static TickType_t lastWakeTime;
+  lastWakeTime = xTaskGetTickCount();
+
   static uint8_t lastUID[10] = {0};
   static uint8_t lastUIDLen = 0;
-  
-  static uint32_t lastSeenTick = 0, now;
-  static uint8_t cardPresent = 0;
+
+  static TickType_t lastSeenTick = 0, now;
+  static RFID_ItemEvent_t evt = RFID_ITEM_REMOVED; 
 
   uint8_t txBuffer[TX_BUF_SIZE], rxBuffer[RX_BUF_SIZE], rxLen;
   uint8_t status;
@@ -227,6 +244,9 @@ void RFID_DriverTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+    // poll schedule
+    vTaskDelayUntil(&lastWakeTime, pdMS_TO_TICKS(RFID_POLL_PERIOD));
+
     // reset Tx & Rx buffer before polling
     RFID_RC522_resetTxRxBuf(txBuffer, rxBuffer);
     
@@ -247,7 +267,6 @@ void RFID_DriverTask(void *argument)
         else
         {
           DEBUG_LOG1("RFID_RC522_poll: ATQA length error\r\n");
-          osDelay(RFID_DRIVER_TASK_DELAY);
           continue;
         }
 
@@ -262,7 +281,9 @@ void RFID_DriverTask(void *argument)
             DEBUG_LOG1("RFID_RC522_antiColl: success\r\n");
 
             lastSeenTick = xTaskGetTickCount();
-            cardPresent = 1;
+            evt = RFID_ITEM_PRESENT;
+
+            rfidItem_QSend.event = (uint8_t) evt;
 
             // copy UID and its length
             memcpy(rfidItem_QSend.uid, rxBuffer, rxLen);
@@ -320,19 +341,21 @@ void RFID_DriverTask(void *argument)
         DEBUG_LOG1("RFID_RC522_poll: unknown error\r\n");
     } // switch poll status
 
-    // TODO: implement SELECT + SAK to complete UID Selection (ISO 14443A)
-    // realized it is not necessary for this application.
-
-    osDelay(RFID_DRIVER_TASK_DELAY); // delay between polling 
-
+    // detect RFID item removal
     now = xTaskGetTickCount();
 
-    if (cardPresent && ((now - lastSeenTick) > \
-    pdMS_TO_TICKS(RFID_CARD_REMOVE_TIMEOUT)))
+    if ((evt == RFID_ITEM_PRESENT) && ((now - lastSeenTick) > \
+    pdMS_TO_TICKS(RFID_ITEM_REMOVE_TIMEOUT)))
     {
-      DEBUG_LOG0("Card removed.\r\n");
+      evt = RFID_ITEM_REMOVED;
 
-      cardPresent = 0;
+      memset(&rfidItem_QSend, 0, sizeof(rfidItem_QSend));
+      rfidItem_QSend.event = (uint8_t) evt;
+
+      // put rfidItem_QSend in RFIDQueue
+      if (osMessageQueuePut(xRFIDQueueHandle, &rfidItem_QSend, 0, 0) != osOK)
+        DEBUG_LOG1("RFID_DriverTask: Error: RFIDQueue Full...");
+
       memset(lastUID, 0, sizeof(lastUID));
       lastUIDLen = 0;
     }
@@ -352,30 +375,46 @@ void RFID_DriverTask(void *argument)
 void RFID_AppTask(void *argument)
 {
   /* USER CODE BEGIN RFID_AppTask */
+  DEBUG_LOG0("freeRTOS Started\r\n");
+  DEBUG_LOG0("-------------------------------\r\n");
+  
   RFID_Item_t rfidItem_QRecv;
-
-  DEBUG_LOG0("freeRTOS Started\r\n"); 
+  RFID_ItemEvent_t event = RFID_ITEM_REMOVED;
 
   for(;;)
   {
     // get rfidItem from RFIDQueue
     osMessageQueueGet(xRFIDQueueHandle, &rfidItem_QRecv, 0, osWaitForever);
 
-    // print rfidItem
-    DEBUG_LOG0("Card Detected!\r\n");
-    DEBUG_LOG0("---------- RFID ITEM ----------\r\n");
-    DEBUG_LOG0("ATQA: ");
-    for (uint8_t i = 0; i < RFID_ATQA_LEN; i++)
-      DEBUG_LOG0("%02X ", rfidItem_QRecv.atqa[i]);
-    DEBUG_LOG0("\r\n");
-    
-    DEBUG_LOG0("UID:  ");
-    for (uint8_t i = 0; i < rfidItem_QRecv.uidLen; i++)
-      DEBUG_LOG0("%02X ", rfidItem_QRecv.uid[i]);
-    DEBUG_LOG0("\r\n");
-    DEBUG_LOG0("-------------------------------\r\n");
+    event = (RFID_ItemEvent_t) rfidItem_QRecv.event;
 
-    // TODO: authentication logic
+    if (event == RFID_ITEM_PRESENT)
+    {
+      // print rfidItem
+      DEBUG_LOG0("RFID Item Detected!\r\n");
+      DEBUG_LOG0("---------- RFID ITEM ----------\r\n");
+      DEBUG_LOG0("ATQA: ");
+      for (uint8_t i = 0; i < RFID_ATQA_LEN; i++)
+        DEBUG_LOG0("%02X ", rfidItem_QRecv.atqa[i]);
+      DEBUG_LOG0("\r\n");
+      
+      DEBUG_LOG0("UID:  ");
+      for (uint8_t i = 0; i < rfidItem_QRecv.uidLen; i++)
+        DEBUG_LOG0("%02X ", rfidItem_QRecv.uid[i]);
+      DEBUG_LOG0("\r\n");
+      DEBUG_LOG0("-------------------------------\r\n");
+
+      // TODO: authentication logic
+      // TODO: relay logic
+
+    }
+    else if (event == RFID_ITEM_REMOVED)
+    {
+      DEBUG_LOG0("RFID Item removed.\r\n");
+      
+      // TODO: relay logic
+
+    }
 
     osDelay(RFID_APP_TASK_DELAY);
   }

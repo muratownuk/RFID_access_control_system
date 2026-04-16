@@ -10,7 +10,7 @@
     
  */
 #define DEBUG_PRINTF0       1
-#define DEBUG_PRINTF1       1
+#define DEBUG_PRINTF1       0
 #define DEBUG_PRINTF2       0
 #define DEBUG_PRINTF3       0
 
