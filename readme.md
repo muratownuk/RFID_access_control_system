@@ -123,12 +123,13 @@ st-flash write build/RFID_access_control_system.bin 0x8000000
 ```
 System Initialized
 freeRTOS Started
-
-
+-------------------------------
+RFID Item Detected!
 ---------- RFID ITEM ----------
 ATQA: 04 00
 UID:  91 F7 64 06
 -------------------------------
+RFID Item Removed.
 ```
 
 ## Next Steps 
@@ -136,7 +137,7 @@ UID:  91 F7 64 06
 - [x] Add USART2 debug prints
 - [x] Implement RFID-RC522 SPI driver
 - [x] Create IRQ-based RFID reading task
-- [ ] Implement SELECT + SAK (complete ISO14443A flow)
+- [ ] Implement SELECT + SAK (complete ISO14443A flow) (!NOT NEEDED!)
 - [ ] Add access control logic (relay/door unlock)
 - [ ] Update documentation with wiring diagrams and task flow
 

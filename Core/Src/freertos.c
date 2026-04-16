@@ -410,7 +410,7 @@ void RFID_AppTask(void *argument)
     }
     else if (event == RFID_ITEM_REMOVED)
     {
-      DEBUG_LOG0("RFID Item removed.\r\n");
+      DEBUG_LOG0("RFID Item Removed.\r\n");
       
       // TODO: relay logic
 
