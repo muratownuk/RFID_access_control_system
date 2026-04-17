@@ -19,7 +19,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "stm32f4xx_hal_gpio.h"
+#include "cmsis_os2.h"
+#include "portmacro.h"
+#include "projdefs.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -29,8 +31,6 @@
 #include "retarget.h"
 #include "rfid_rc522.h"
 #include "mfrc522_regs.h"
-#include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 /* USER CODE END Includes */

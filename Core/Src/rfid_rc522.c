@@ -1,16 +1,12 @@
 #include "rfid_rc522.h"
 #include "cmsis_os.h"
-#include "cmsis_os2.h"
 #include "main.h"
 #include "retarget.h"
-#include "portmacro.h"
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_def.h"
 #include "stm32f4xx_hal_gpio.h"
-#include "stm32f4xx_hal_pwr.h"
 #include "stm32f4xx_hal_spi.h"
 #include "mfrc522_regs.h"
-#include <stdint.h>
 
 // SPI1 handle 
 extern SPI_HandleTypeDef hspi1;
