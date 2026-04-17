@@ -71,6 +71,10 @@ void Error_Handler(void);
 #define SPI1_CS_GPIO_Port GPIOA
 #define OUTPUT_RELAY_Pin GPIO_PIN_0
 #define OUTPUT_RELAY_GPIO_Port GPIOB
+#define LED_LOCKED_R_Pin GPIO_PIN_1
+#define LED_LOCKED_R_GPIO_Port GPIOB
+#define LED_UNLOCKED_G_Pin GPIO_PIN_2
+#define LED_UNLOCKED_G_GPIO_Port GPIOB
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
@@ -79,8 +83,6 @@ void Error_Handler(void);
 #define SWO_GPIO_Port GPIOB
 #define RFID_RC522_RST_Pin GPIO_PIN_6
 #define RFID_RC522_RST_GPIO_Port GPIOB
-#define LED_STATUS_Pin GPIO_PIN_7
-#define LED_STATUS_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

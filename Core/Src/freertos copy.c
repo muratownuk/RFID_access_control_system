@@ -19,7 +19,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "stm32f4xx_hal_gpio.h"
+#include "cmsis_os2.h"
+#include "portmacro.h"
+#include "projdefs.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -56,7 +58,7 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 #endif
 
 // timeouts and delays 
-#define RFID_RELAY_TASK_DELAY         1000
+#define RFID_DEFAULT_TASK_DELAY       1000
 #define RFID_APP_TASK_DELAY           100
 #define RFID_ITEM_REMOVE_TIMEOUT      2500
 
@@ -85,12 +87,12 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for relayTask */
-osThreadId_t relayTaskHandle;
-const osThreadAttr_t relayTask_attributes = {
-  .name = "relayTask",
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh1,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for RFIDDriverTask */
 osThreadId_t RFIDDriverTaskHandle;
@@ -117,17 +119,6 @@ const osMessageQueueAttr_t xRFIDQueue_attributes = {
   .mq_mem = &xRFIDQueueBuffer,
   .mq_size = sizeof(xRFIDQueueBuffer)
 };
-/* Definitions for xRelayQueue */
-osMessageQueueId_t xRelayQueueHandle;
-uint8_t xRelayQueueBuffer[ 5 * 8 ];
-osStaticMessageQDef_t xRelayQueueControlBlock;
-const osMessageQueueAttr_t xRelayQueue_attributes = {
-  .name = "xRelayQueue",
-  .cb_mem = &xRelayQueueControlBlock,
-  .cb_size = sizeof(xRelayQueueControlBlock),
-  .mq_mem = &xRelayQueueBuffer,
-  .mq_size = sizeof(xRelayQueueBuffer)
-};
 /* Definitions for RFIDSem */
 osSemaphoreId_t RFIDSemHandle;
 const osSemaphoreAttr_t RFIDSem_attributes = {
@@ -144,7 +135,7 @@ RFID_Status_t RFID_RC522_antiColl(uint8_t *txBuf, uint8_t *rxBuf, \
 
 /* USER CODE END FunctionPrototypes */
 
-void RelayTask(void *argument);
+void DefaultTask(void *argument);
 void RFID_DriverTask(void *argument);
 void RFID_AppTask(void *argument);
 
@@ -180,16 +171,13 @@ void MX_FREERTOS_Init(void) {
   /* creation of xRFIDQueue */
   xRFIDQueueHandle = osMessageQueueNew (10, 16, &xRFIDQueue_attributes);
 
-  /* creation of xRelayQueue */
-  xRelayQueueHandle = osMessageQueueNew (5, 8, &xRelayQueue_attributes);
-
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of relayTask */
-  relayTaskHandle = osThreadNew(RelayTask, NULL, &relayTask_attributes);
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(DefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of RFIDDriverTask */
   RFIDDriverTaskHandle = osThreadNew(RFID_DriverTask, NULL, &RFIDDriverTask_attributes);
@@ -207,24 +195,27 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_RelayTask */
+/* USER CODE BEGIN Header_DefaultTask */
 /**
-  * @brief  Function implementing the relayTask thread.
+  * @brief  Function implementing the defaultTask thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_RelayTask */
-void RelayTask(void *argument)
+/* USER CODE END Header_DefaultTask */
+void DefaultTask(void *argument)
 {
-  /* USER CODE BEGIN RelayTask */
+  /* USER CODE BEGIN DefaultTask */
+  
+
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(LED_LOCKED_R_GPIO_Port, LED_LOCKED_R_Pin);
-
-    osDelay(RFID_RELAY_TASK_DELAY);
+    // heartbeat 
+    HAL_GPIO_TogglePin(LED_STATUS_GPIO_Port, LED_STATUS_Pin);
+    
+    osDelay(RFID_DEFAULT_TASK_DELAY);
   }
-  /* USER CODE END RelayTask */
+  /* USER CODE END DefaultTask */
 }
 
 /* USER CODE BEGIN Header_RFID_DriverTask */

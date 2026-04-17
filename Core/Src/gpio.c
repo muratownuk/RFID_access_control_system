@@ -54,10 +54,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, OUTPUT_RELAY_Pin|LED_STATUS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, OUTPUT_RELAY_Pin|LED_LOCKED_R_Pin|RFID_RC522_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(RFID_RC522_RST_GPIO_Port, RFID_RC522_RST_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LED_UNLOCKED_G_GPIO_Port, LED_UNLOCKED_G_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -78,8 +78,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(SPI1_CS_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OUTPUT_RELAY_Pin RFID_RC522_RST_Pin LED_STATUS_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_RELAY_Pin|RFID_RC522_RST_Pin|LED_STATUS_Pin;
+  /*Configure GPIO pins : OUTPUT_RELAY_Pin LED_LOCKED_R_Pin LED_UNLOCKED_G_Pin RFID_RC522_RST_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_RELAY_Pin|LED_LOCKED_R_Pin|LED_UNLOCKED_G_Pin|RFID_RC522_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
