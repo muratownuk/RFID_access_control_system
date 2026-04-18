@@ -54,10 +54,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, OUTPUT_RELAY_Pin|LED_LOCKED_R_Pin|RFID_RC522_RST_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, OUTPUT_RELAY_Pin|LED_UNLOCKED_G_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_UNLOCKED_G_GPIO_Port, LED_UNLOCKED_G_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LED_LOCKED_R_Pin|RFID_RC522_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
