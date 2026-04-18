@@ -41,6 +41,7 @@ add_subdirectory(cmake/stm32cubemx)
 set(USER_SOURCES
     Core/Src/retarget.c
     Core/Src/rfid_rc522.c
+    Core/Src/relay.c
     
 )
 

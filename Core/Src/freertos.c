@@ -30,7 +30,7 @@
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
 #include "rfid_rc522.h"
-#include "mfrc522_regs.h"
+#include "relay.h"
 #include <string.h>
 
 /* USER CODE END Includes */
@@ -217,12 +217,33 @@ void MX_FREERTOS_Init(void) {
 void RelayTask(void *argument)
 {
   /* USER CODE BEGIN RelayTask */
+
+  RelayMessage_t relayMsg_QRecv;
+
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(LED_LOCKED_R_GPIO_Port, LED_LOCKED_R_Pin);
+    osMessageQueueGet(xRelayQueueHandle, &relayMsg_QRecv, 0, osWaitForever);
 
-    osDelay(RFID_RELAY_TASK_DELAY);
+    if (relayMsg_QRecv.cmd == RELAY_CMD_UNLOCK)
+    {
+      // turn relay on to unlock
+      turnRelayON();
+
+      // keep door unlocked for .duration_ms
+      vTaskDelay(pdMS_TO_TICKS(relayMsg_QRecv.duration_ms));
+
+      // turn relay off and lock
+      turnRelayOFF();
+    }
+    else if (relayMsg_QRecv.cmd == RELAY_CMD_LOCK)
+    {
+      resetRelay();
+    }
+    else
+    {
+      DEBUG_LOG0("RelayTask: Unknown RelayCmd_t");
+    }
   }
   /* USER CODE END RelayTask */
 }
