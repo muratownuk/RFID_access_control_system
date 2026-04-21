@@ -1,5 +1,10 @@
+/**
+  *****************************************************************************
+  * @file               : rfid_rc522.c
+  * @brief              : RFID-RC522 driver.
+  *****************************************************************************
+ */
 #include "rfid_rc522.h"
-#include "cmsis_os.h"
 #include "main.h"
 #include "retarget.h"
 #include "stm32f4xx_hal.h"
@@ -12,15 +17,12 @@
 extern SPI_HandleTypeDef hspi1;
 
 // private defines
-#define SPI_TIMEOUT_MS              10
+#define SPI_TIMEOUT_MS              10      // timeout for SPI Tx/Rx
 
 #define RFID_RC522_TIMER_PRESCALER  0x3E
 #define RFID_RC522_TIMER_RELOAD_L   0x1E
 
 #define MFRC522_ERRORMASK           0x1B
-
-// external variables
-extern osSemaphoreId_t RFIDSemHandle;           // created in freertos.c
 
 static void RFID_RC522_WriteReg(uint8_t reg, uint8_t value)
 {
