@@ -137,7 +137,7 @@ RFID Item Removed.
 - [x] Add USART2 debug prints
 - [x] Implement RFID-RC522 SPI driver
 - [x] Create IRQ-based RFID reading task
-- [ ] Implement SELECT + SAK (complete ISO14443A flow) (!NOT NEEDED!)
-- [ ] Add access control logic (relay/door unlock)
+- [x] Add access control logic (relay/door unlock)
+- [ ] Add STM32 flash read/write for UID authorization
 - [ ] Update documentation with wiring diagrams and task flow
 
