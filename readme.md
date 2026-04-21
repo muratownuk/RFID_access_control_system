@@ -7,12 +7,13 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
 
 ### Key Features
 - SPI-based communication with MFRC522 RFID-RC522 module
-- Interrupt-driven RFID detection (EXTI → ISR → semaphore)
+- Interrupt-driven RFID detection (EXTI -> ISR -> semaphore)
 - FreeRTOS multitasking (Driver + Application separation)
 - Queue-based inter-task communication
 - Anti-collision handling with cascade level support (UID up to 10 bytes)
+- UID extraction and authorization
+- Solenoid lock actuation through relay
 - UART (USART2) debug logging system
-- LED heartbeat task for system monitoring
 
 ---
 
@@ -32,9 +33,11 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
            |
      Message Queue
            |
-    RFID App Task
+     RFID App Task
            |
    (UID Processing)
+           |
+     (Lock\Unlock)
 ```
 
 ---
@@ -43,9 +46,9 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
 
 ### Implemented
 - FreeRTOS scheduler with 3 tasks:
-  - **Default Task** -> LED heartbeat
+  - **Relay Task** -> LED state and solenoid lock actuation
   - **RFID Driver Task** -> Handles polling + anti-collision
-  - **RFID App Task** -> Processes and prints RFID data
+  - **RFID App Task** -> Processes and prints RFID data then authorizes
 - SPI communication with MFRC522 RFID-RC522
 - IRQ-based event handling using EXTI0
 - REQA command (card detection)
@@ -71,12 +74,16 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
 
 - `Core/Src/`
   - `rfid_rc522.c`                      # RFID-RC522 driver implementation
+  - `rfid_services.c`                   # RFID-RC522 services implementation
+  - `relay.c`                           # Relay driver + LED implementation
   - `freertos.c`                        # RTOS tasks and logic
   - `main.c`                            # System entry point
 
 - `Core/Inc/`
-  - `rfid_rc522.h`                      # RFID-RC522 API + data structures
   - `mfrc522_regs.h`                    # MFRC522 register definitions
+  - `rfid_rc522.h`                      # RFID-RC522 API
+  - `rfid_services.h`                   # RFID-RC522 service API & data structs
+  - `relay.h`                           # Relay API & data structures
 
 ---
 
@@ -88,7 +95,7 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
   - SPI1 -> RFID communication
   - EXTI0 -> RFID-RC522 IRQ pin
   - USART2 -> Debug logging
-  - GPIO -> LED (heartbeat) + Relay (future use)
+  - GPIO -> LED + Relay
 
 ---
 
@@ -129,6 +136,14 @@ RFID Item Detected!
 ATQA: 04 00
 UID:  91 F7 64 06
 -------------------------------
+Access Granted!
+RFID Item Removed.
+RFID Item Detected!
+---------- RFID ITEM ----------
+ATQA: 04 00
+UID:  D5 AA E7 06
+-------------------------------
+Access Denied!
 RFID Item Removed.
 ```
 
@@ -140,4 +155,5 @@ RFID Item Removed.
 - [x] Add access control logic (relay/door unlock)
 - [ ] Add STM32 flash read/write for UID authorization
 - [ ] Update documentation with wiring diagrams and task flow
+
 
