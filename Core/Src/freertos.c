@@ -38,12 +38,16 @@
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE BEGIN PTD */
+typedef enum 
+{
+  ACCESS_DENIED,
+  ACCESS_GRANTED
+} Access_t;
 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 // debug mode (uncomment)
 //#define DEBUG_MODE
 
@@ -58,7 +62,7 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 // timeouts and delays 
 #define RFID_RELAY_TASK_DELAY         1000
 #define RFID_APP_TASK_DELAY           100
-#define RFID_ITEM_REMOVE_TIMEOUT      2500
+#define RFID_ITEM_REMOVE_TIMEOUT      2000
 
 // tx/rx buf sizes
 #define RX_BUF_SIZE                   16
@@ -74,6 +78,9 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 #define CASCADE_LEVEL_3               0x97
 #define CASCADE_TAG                   0x88
 
+// flash (temp) 
+#define WHITELIST_MAX                 5
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -83,6 +90,17 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+static const uint8_t whiteList[WHITELIST_MAX][RFID_MAX_UID_LEN] = 
+{
+  {0x91, 0xF7, 0x64, 0x06},
+  {0x12, 0x34, 0x56, 0x78}
+};
+
+static const uint8_t whiteList_len[WHITELIST_MAX] = 
+{
+  4, 
+  4
+};
 
 /* USER CODE END Variables */
 /* Definitions for relayTask */
@@ -141,6 +159,8 @@ void RFID_RC522_resetTxRxBuf(uint8_t *txBuf, uint8_t *rxBuf);
 RFID_Status_t RFID_RC522_poll(uint8_t *txBuf, uint8_t *rxBuf, uint8_t *rxLen);
 RFID_Status_t RFID_RC522_antiColl(uint8_t *txBuf, uint8_t *rxBuf, \
   uint8_t *rxLen);
+
+static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen);
 
 /* USER CODE END FunctionPrototypes */
 
@@ -410,6 +430,8 @@ void RFID_AppTask(void *argument)
   
   RFID_Item_t rfidItem_QRecv;
   RFID_ItemEvent_t event = RFID_ITEM_REMOVED;
+  RelayMessage_t relayMsg_QSend;
+  Access_t auth = ACCESS_DENIED;
 
   for(;;)
   {
@@ -434,17 +456,46 @@ void RFID_AppTask(void *argument)
       DEBUG_LOG0("\r\n");
       DEBUG_LOG0("-------------------------------\r\n");
 
-      // TODO: authentication logic
-      // TODO: relay logic
+      // check whiteList
+      auth = isUIDAuthorized(rfidItem_QRecv.uid, rfidItem_QRecv.uidLen);
 
+      if (auth == ACCESS_DENIED)
+      {
+        DEBUG_LOG0("Access Denied!\r\n");
+
+        // send lock message to RelayTask
+        relayMsg_QSend.cmd = RELAY_CMD_LOCK;
+        relayMsg_QSend.duration_ms = 0;
+
+        if (osMessageQueuePut(xRelayQueueHandle, &relayMsg_QSend, 0, 0) != osOK)
+          DEBUG_LOG1("RFID_AppTask: Error: RelayQueue Full...\r\n");
+      }
+      else if (auth == ACCESS_GRANTED)
+      {
+        DEBUG_LOG0("Access Granted!\r\n");
+
+        // send unlock message to RelayTask
+        relayMsg_QSend.cmd = RELAY_CMD_UNLOCK;
+        relayMsg_QSend.duration_ms = ACCESS_UNLOCK_TIME_MS;
+
+        if (osMessageQueuePut(xRelayQueueHandle, &relayMsg_QSend, 0, 0) != osOK)
+          DEBUG_LOG1("RFID_AppTask: Error: RelayQueue Full...\r\n");
+      }
+      else 
+        DEBUG_LOG0("RFID_AppTask: Error: Incorrect Access_t...\r\n");
     }
     else if (event == RFID_ITEM_REMOVED)
     {
       DEBUG_LOG0("RFID Item Removed.\r\n");
       
-      // TODO: relay logic
+      relayMsg_QSend.cmd = RELAY_CMD_LOCK;
+      relayMsg_QSend.duration_ms = 0;
 
+      if (osMessageQueuePut(xRelayQueueHandle, &relayMsg_QSend, 0, 0) != osOK)
+          DEBUG_LOG1("RFID_AppTask: Error: RelayQueue Full...\r\n");
     }
+    else
+      DEBUG_LOG0("RFID_AppTask: Error: Incorrect RFID_ItemEvent_t...\r\n");
 
     osDelay(RFID_APP_TASK_DELAY);
   }
@@ -532,6 +583,16 @@ void RFID_RC522_resetTxRxBuf(uint8_t *txBuf, uint8_t *rxBuf)
 {
   memset(txBuf, 0, TX_BUF_SIZE);
   memset(rxBuf, 0, RX_BUF_SIZE);
+}
+
+static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen)
+{
+  for (uint8_t i = 0; i < WHITELIST_MAX; i++)
+  {
+    if ((uidLen == whiteList_len[i]) && (memcmp(uid, whiteList[i], uidLen) == 0))
+      return ACCESS_GRANTED; // authorized
+  }
+  return ACCESS_DENIED; // not authorized
 }
 
 /* USER CODE END Application */

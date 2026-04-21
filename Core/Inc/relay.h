@@ -24,6 +24,9 @@ typedef struct
     uint32_t duration_ms;       // how long to unlock
 } RelayMessage_t;
 
+// - DEFINES -
+#define ACCESS_UNLOCK_TIME_MS       3000
+
 // - FUNCTION PROTOTYPES -
 void turnRelayOFF(void);
 void turnRelayON(void);
