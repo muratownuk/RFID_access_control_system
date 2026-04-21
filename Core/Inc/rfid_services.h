@@ -20,7 +20,7 @@
   #define RFID_SEM_ACQUIRE_TIMEOUT      50
 #endif
 
-#define RFID_ITEM_REMOVE_TIMEOUT        2000
+#define RFID_ITEM_REMOVE_TIMEOUT        1500
 
 // RFID_Item_t struct lengths
 #define RFID_MAX_UID_LEN                10

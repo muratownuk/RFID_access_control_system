@@ -49,6 +49,11 @@ typedef enum
 // timeouts and delays 
 #define RFID_APP_TASK_DELAY           100
 
+// LED defs
+#define LED_TOGGLE_DELAY              125
+#define LED_BLIP_COUNT_1              1
+#define LED_BLIP_COUNT_2              2
+
 // flash (temp) 
 #define WHITELIST_MAX                 5
 
@@ -125,6 +130,9 @@ const osSemaphoreAttr_t RFIDSem_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
+void blipGLED(uint8_t blipCount);
+void blipRLED(uint8_t blipCount);
+
 static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen);
 
 /* USER CODE END FunctionPrototypes */
@@ -211,6 +219,7 @@ void RelayTask(void *argument)
 
     if (relayMsg_QRecv.cmd == RELAY_CMD_LOCK)
     {
+      blipRLED(LED_BLIP_COUNT_2);
       resetRelay();
     }
     else if (relayMsg_QRecv.cmd == RELAY_CMD_UNLOCK )
@@ -228,6 +237,7 @@ void RelayTask(void *argument)
     {
       DEBUG_LOG0("RelayTask: Unknown RelayCmd_t");
     }
+
   }
 
   /* USER CODE END RelayTask */
@@ -449,16 +459,12 @@ void RFID_AppTask(void *argument)
       }
       else 
         DEBUG_LOG0("RFID_AppTask: Error: Incorrect Access_t...\r\n");
+
     }
     else if (event == RFID_ITEM_REMOVED)
     {
       DEBUG_LOG0("RFID Item Removed.\r\n");
-      
-      relayMsg_QSend.cmd = RELAY_CMD_LOCK;
-      relayMsg_QSend.duration_ms = 0;
-
-      if (osMessageQueuePut(xRelayQueueHandle, &relayMsg_QSend, 0, 0) != osOK)
-          DEBUG_LOG1("RFID_AppTask: Error: RelayQueue Full...\r\n");
+      blipRLED(LED_BLIP_COUNT_1); // blip red LED to show removal
     }
     else
       DEBUG_LOG0("RFID_AppTask: Error: Incorrect RFID_ItemEvent_t...\r\n");
@@ -470,6 +476,30 @@ void RFID_AppTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void blipGLED(uint8_t blipCount)
+{
+  for (uint8_t i = 0; i < blipCount; i++)
+  {
+      toggleGLED();                       // ON
+      osDelay(LED_TOGGLE_DELAY);
+
+      toggleGLED();                       // OFF
+      osDelay(LED_TOGGLE_DELAY);
+  }
+}
+
+void blipRLED(uint8_t blipCount)
+{
+  for (uint8_t i = 0; i < blipCount; i++)
+  {
+    toggleRLED();                       // ON
+    osDelay(LED_TOGGLE_DELAY);
+
+    toggleRLED();                       // OFF
+    osDelay(LED_TOGGLE_DELAY);
+  }
+}
+
 static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen)
 {
   for (uint8_t i = 0; i < WHITELIST_MAX; i++)

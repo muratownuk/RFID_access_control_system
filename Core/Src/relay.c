@@ -55,5 +55,20 @@ void resetRelay(void)
             GPIO_PIN_SET);
 }
 
+void toggleGLED(void)
+{
+    // toggle only if red LED is off
+    if (HAL_GPIO_ReadPin(LED_LOCKED_R_GPIO_Port, LED_LOCKED_R_Pin) == \
+    GPIO_PIN_RESET)
+        HAL_GPIO_TogglePin(LED_UNLOCKED_G_GPIO_Port, LED_UNLOCKED_G_Pin);
+}
+
+void toggleRLED(void)
+{
+    // toggle only if green LED is off
+    if (HAL_GPIO_ReadPin(LED_UNLOCKED_G_GPIO_Port, LED_UNLOCKED_G_Pin) == \
+    GPIO_PIN_RESET)
+        HAL_GPIO_TogglePin(LED_LOCKED_R_GPIO_Port, LED_LOCKED_R_Pin);
+}
 
 

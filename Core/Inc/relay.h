@@ -31,6 +31,8 @@ typedef struct
 void turnRelayOFF(void);
 void turnRelayON(void);
 void resetRelay(void);
+void toggleGLED(void);
+void toggleRLED(void);
 
 #endif
 
