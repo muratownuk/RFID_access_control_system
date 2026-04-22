@@ -42,6 +42,7 @@ set(USER_SOURCES
     Core/Src/retarget.c
     Core/Src/rfid_rc522.c
     Core/Src/rfid_services.c
+    Core/Src/flash_storage.c
     Core/Src/relay.c
 
 )
