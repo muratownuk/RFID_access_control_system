@@ -8,7 +8,7 @@
 #define __FLASH_STORAGE_H
 // includes
 #include "stm32f4xx_hal.h"
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 #include <stdint.h>
 
 // - DEFINES -
@@ -38,8 +38,22 @@ typedef struct
 } FlashUID_t;
 
 // - FUNCTION PROTOTYPES -
+// init
+void FlashStorage_Init(void);
 
+// flash operations
+uint8_t FlashStorage_Exists(uint8_t *uid, uint8_t uidLen);
+HAL_StatusTypeDef FlashStorage_Add(uint8_t *uid, uint8_t uidLen);
+HAL_StatusTypeDef FlashStorage_Delete(uint8_t *uid, uint8_t uidLen);
+
+// read
+uint32_t FlashStorage_ReadAll(FlashUID_t *buffer, uint32_t max);
+
+// erase
+HAL_StatusTypeDef FlashStorage_EraseAll(void);
 
 #endif
+
+
 
 
