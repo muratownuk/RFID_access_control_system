@@ -28,7 +28,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
-//#include "stm32f4xx_hal_def.h"
 #include "flash_storage.h"
 #include "rfid_services.h"
 #include "relay.h"
@@ -127,6 +126,11 @@ const osMessageQueueAttr_t xRelayQueue_attributes = {
   .mq_mem = &xRelayQueueBuffer,
   .mq_size = sizeof(xRelayQueueBuffer)
 };
+/* Definitions for flashMutex */
+osMutexId_t flashMutexHandle;
+const osMutexAttr_t flashMutex_attributes = {
+  .name = "flashMutex"
+};
 /* Definitions for RFIDSem */
 osSemaphoreId_t RFIDSemHandle;
 const osSemaphoreAttr_t RFIDSem_attributes = {
@@ -156,9 +160,11 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-  addUIDData_Init();
 
   /* USER CODE END Init */
+  /* Create the mutex(es) */
+  /* creation of flashMutex */
+  flashMutexHandle = osMutexNew(&flashMutex_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -218,6 +224,8 @@ void RelayTask(void *argument)
 {
   /* USER CODE BEGIN RelayTask */
   RelayMessage_t relayMsg_QRecv;
+
+  addUIDData_Init(); // for now 
 
   /* Infinite loop */
   for(;;)
@@ -543,6 +551,4 @@ static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen)
 */
 
 /* USER CODE END Application */
-
-
 

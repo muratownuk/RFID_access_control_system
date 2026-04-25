@@ -10,7 +10,7 @@
 
 // global variables
 static uint32_t readWritePtr = FLASH_STORAGE_ADDR;
-static osMutexId_t flashMutex;
+extern osMutexId_t flashMutexHandle;        // created in freertos.c
 
 // - FUNCTIONS - 
 // internal 
@@ -37,9 +37,6 @@ void FlashStorage_Init(void)
     uint32_t addr = FLASH_STORAGE_ADDR;     
     // entry ptr to FlashUID data structure
     FlashUID_t *entryPtr;
-
-    // create flash mutex
-    flashMutex = osMutexNew(NULL);
 
     while (addr < (FLASH_STORAGE_ADDR + FLASH_STORAGE_SIZE))
     {
@@ -90,7 +87,7 @@ HAL_StatusTypeDef FlashStorage_Add(uint8_t *uid, uint8_t uidLen)
         return HAL_OK; // already exists
 
     // acquire mutex for flash operation
-    osMutexAcquire(flashMutex, osWaitForever);
+    osMutexAcquire(flashMutexHandle, osWaitForever);
     
     // initialize entry data
     memset(&entry, 0, sizeof(entry));
@@ -111,7 +108,7 @@ HAL_StatusTypeDef FlashStorage_Add(uint8_t *uid, uint8_t uidLen)
         != HAL_OK)
         {
             Flash_LockAll();
-            osMutexRelease(flashMutex);
+            osMutexRelease(flashMutexHandle);
             return HAL_ERROR;
         }
 
@@ -119,7 +116,7 @@ HAL_StatusTypeDef FlashStorage_Add(uint8_t *uid, uint8_t uidLen)
     }
 
     Flash_LockAll();
-    osMutexRelease(flashMutex);
+    osMutexRelease(flashMutexHandle);
     
     return HAL_OK;
 }
@@ -156,7 +153,7 @@ HAL_StatusTypeDef FlashStorage_Delete(uint8_t *uid, uint8_t uidLen)
 
     FlashUID_t *entryPtr;
 
-    osMutexAcquire(flashMutex, osWaitForever);
+    osMutexAcquire(flashMutexHandle, osWaitForever);
 
     // delete entry from flash (change .state)
     Flash_UnlockAll();
@@ -175,13 +172,13 @@ HAL_StatusTypeDef FlashStorage_Delete(uint8_t *uid, uint8_t uidLen)
             {
                 // flash programming error...
                 Flash_LockAll();
-                osMutexRelease(flashMutex);
+                osMutexRelease(flashMutexHandle);
                 return HAL_ERROR;
             }
             
             // if we reach here, UID data is in flash and delete successful
             Flash_LockAll();
-            osMutexRelease(flashMutex);
+            osMutexRelease(flashMutexHandle);
             return HAL_OK;
         }
 
@@ -191,7 +188,7 @@ HAL_StatusTypeDef FlashStorage_Delete(uint8_t *uid, uint8_t uidLen)
     // if we reach here, UID data is not in flash
     Flash_LockAll();
 
-    osMutexRelease(flashMutex);
+    osMutexRelease(flashMutexHandle);
 
     return HAL_ERROR;
 }
@@ -203,7 +200,7 @@ HAL_StatusTypeDef FlashStorage_EraseAll(void)
     FLASH_EraseInitTypeDef eraseInit;
     HAL_StatusTypeDef status;
 
-    osMutexAcquire(flashMutex, osWaitForever);
+    osMutexAcquire(flashMutexHandle, osWaitForever);
 
     // erase flash
     Flash_UnlockAll();
@@ -220,7 +217,7 @@ HAL_StatusTypeDef FlashStorage_EraseAll(void)
     // reset read/write pointer
     readWritePtr = FLASH_STORAGE_ADDR;
 
-    osMutexRelease(flashMutex);
+    osMutexRelease(flashMutexHandle);
 
     return status;
 }
