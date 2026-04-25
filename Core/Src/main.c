@@ -27,8 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
-#include <stdint.h>
-#include <stdio.h>
+#include "flash_storage.h"
 #include "rfid_rc522.h"
 
 /* USER CODE END Includes */
@@ -109,6 +108,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+  FlashStorage_Init();
   RFID_RC522_Init();
   DEBUG_LOG0("System Initialized\r\n");
 

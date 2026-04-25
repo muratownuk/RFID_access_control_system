@@ -28,6 +28,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "retarget.h"
+//#include "stm32f4xx_hal_def.h"
+#include "flash_storage.h"
 #include "rfid_services.h"
 #include "relay.h"
 
@@ -56,6 +58,7 @@ typedef enum
 
 // flash (temp) 
 #define WHITELIST_MAX                 5
+#define PROGRAM_FLASH                 0
 
 /* USER CODE END PD */
 
@@ -66,15 +69,17 @@ typedef enum
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-static const uint8_t whiteList[WHITELIST_MAX][RFID_MAX_UID_LEN] = 
+static uint8_t whiteList[WHITELIST_MAX][RFID_MAX_UID_LEN] = 
 {
   {0x91, 0xF7, 0x64, 0x06},
+  {0x08, 0xF5, 0x23, 0xB7}, 
   {0x12, 0x34, 0x56, 0x78}
 };
 
-static const uint8_t whiteList_len[WHITELIST_MAX] = 
+static uint8_t whiteList_len[WHITELIST_MAX] = 
 {
-  4, 
+  4,
+  4,
   4
 };
 
@@ -133,7 +138,8 @@ const osSemaphoreAttr_t RFIDSem_attributes = {
 void blipGLED(uint8_t blipCount);
 void blipRLED(uint8_t blipCount);
 
-static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen);
+//static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen);
+void addUIDData_Init(void);
 
 /* USER CODE END FunctionPrototypes */
 
@@ -150,6 +156,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+  addUIDData_Init();
 
   /* USER CODE END Init */
 
@@ -432,8 +439,16 @@ void RFID_AppTask(void *argument)
       DEBUG_LOG0("\r\n");
       DEBUG_LOG0("-------------------------------\r\n");
 
+      /*
       // check whiteList
       auth = isUIDAuthorized(rfidItem_QRecv.uid, rfidItem_QRecv.uidLen);
+      */
+
+      // check UID database in flash
+      if (FlashStorage_Exists(rfidItem_QRecv.uid, rfidItem_QRecv.uidLen))
+        auth = ACCESS_GRANTED;
+      else
+        auth = ACCESS_DENIED;
 
       if (auth == ACCESS_DENIED)
       {
@@ -500,6 +515,22 @@ void blipRLED(uint8_t blipCount)
   }
 }
 
+void addUIDData_Init(void)
+{
+  if (PROGRAM_FLASH)
+  {
+    for (uint8_t i = 0; i < 3; i++)
+    {
+      if (FlashStorage_Add(whiteList[i], whiteList_len[i]) != HAL_OK)
+        return;
+      DEBUG_LOG0("UID data %d added to flash.\r\n", i);
+    }
+
+    DEBUG_LOG0("All UID data added to flash.\r\n");
+  }
+}
+
+/*
 static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen)
 {
   for (uint8_t i = 0; i < WHITELIST_MAX; i++)
@@ -509,6 +540,7 @@ static Access_t isUIDAuthorized(uint8_t *uid, uint8_t uidLen)
   }
   return ACCESS_DENIED; // not authorized
 }
+*/
 
 /* USER CODE END Application */
 
