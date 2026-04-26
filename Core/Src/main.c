@@ -51,6 +51,7 @@
 
 /* USER CODE BEGIN PV */
 extern osSemaphoreId_t RFIDSemHandle;
+extern osSemaphoreId_t ButtonSemHandle;
 
 /* USER CODE END PV */
 
@@ -65,10 +66,18 @@ void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN 0 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+  // RFID-RC522 IRQ pin handling
   if (GPIO_Pin == RFID_RC522_IRQ_Pin)
   {
     osSemaphoreRelease(RFIDSemHandle);
     DEBUG_LOG1("IRQ callback fired! - RFIDSem released\r\n"); // debug 
+  }
+
+  // STM32 blue button B1 handling
+  if (GPIO_Pin == B1_Pin)
+  {
+    //osSemaphoreRelease(ButtonSemHandle);
+    DEBUG_LOG0("IRQ callback fired! - ButtonSem Released\r\n"); // debug
   }
 }
 

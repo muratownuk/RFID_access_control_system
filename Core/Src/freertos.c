@@ -88,21 +88,35 @@ osThreadId_t relayTaskHandle;
 const osThreadAttr_t relayTask_attributes = {
   .name = "relayTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh1,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for RFIDDriverTask */
 osThreadId_t RFIDDriverTaskHandle;
 const osThreadAttr_t RFIDDriverTask_attributes = {
   .name = "RFIDDriverTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for RFIDAppTask */
 osThreadId_t RFIDAppTaskHandle;
 const osThreadAttr_t RFIDAppTask_attributes = {
   .name = "RFIDAppTask",
   .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
+/* Definitions for buttonTask */
+osThreadId_t buttonTaskHandle;
+const osThreadAttr_t buttonTask_attributes = {
+  .name = "buttonTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal1,
+};
+/* Definitions for ledTask */
+osThreadId_t ledTaskHandle;
+const osThreadAttr_t ledTask_attributes = {
+  .name = "ledTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for xRFIDQueue */
 osMessageQueueId_t xRFIDQueueHandle;
@@ -136,6 +150,11 @@ osSemaphoreId_t RFIDSemHandle;
 const osSemaphoreAttr_t RFIDSem_attributes = {
   .name = "RFIDSem"
 };
+/* Definitions for ButtonSem */
+osSemaphoreId_t ButtonSemHandle;
+const osSemaphoreAttr_t ButtonSem_attributes = {
+  .name = "ButtonSem"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -150,6 +169,8 @@ void addUIDData_Init(void);
 void RelayTask(void *argument);
 void RFID_DriverTask(void *argument);
 void RFID_AppTask(void *argument);
+void ButtonTask(void *argument);
+void LedTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -173,6 +194,9 @@ void MX_FREERTOS_Init(void) {
   /* Create the semaphores(s) */
   /* creation of RFIDSem */
   RFIDSemHandle = osSemaphoreNew(1, 0, &RFIDSem_attributes);
+
+  /* creation of ButtonSem */
+  ButtonSemHandle = osSemaphoreNew(1, 0, &ButtonSem_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
@@ -202,6 +226,12 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of RFIDAppTask */
   RFIDAppTaskHandle = osThreadNew(RFID_AppTask, NULL, &RFIDAppTask_attributes);
+
+  /* creation of buttonTask */
+  buttonTaskHandle = osThreadNew(ButtonTask, NULL, &buttonTask_attributes);
+
+  /* creation of ledTask */
+  ledTaskHandle = osThreadNew(LedTask, NULL, &ledTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -495,6 +525,42 @@ void RFID_AppTask(void *argument)
     osDelay(RFID_APP_TASK_DELAY);
   }
   /* USER CODE END RFID_AppTask */
+}
+
+/* USER CODE BEGIN Header_ButtonTask */
+/**
+* @brief Function implementing the buttonTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_ButtonTask */
+void ButtonTask(void *argument)
+{
+  /* USER CODE BEGIN ButtonTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END ButtonTask */
+}
+
+/* USER CODE BEGIN Header_LedTask */
+/**
+* @brief Function implementing the ledTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_LedTask */
+void LedTask(void *argument)
+{
+  /* USER CODE BEGIN LedTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END LedTask */
 }
 
 /* Private application code --------------------------------------------------*/

@@ -15,12 +15,12 @@
 #ifdef DEBUG_MODE
   #define RFID_POLL_PERIOD              1000
   #define RFID_SEM_ACQUIRE_TIMEOUT      800
+  #define RFID_ITEM_REMOVE_TIMEOUT      2500
 #else
   #define RFID_POLL_PERIOD              200
   #define RFID_SEM_ACQUIRE_TIMEOUT      50
+  #define RFID_ITEM_REMOVE_TIMEOUT      1250
 #endif
-
-#define RFID_ITEM_REMOVE_TIMEOUT        1500
 
 // RFID_Item_t struct lengths
 #define RFID_MAX_UID_LEN                10

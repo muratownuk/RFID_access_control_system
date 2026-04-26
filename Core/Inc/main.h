@@ -60,6 +60,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
+#define B1_EXTI_IRQn EXTI15_10_IRQn
 #define RFID_RC522_IRQ_Pin GPIO_PIN_0
 #define RFID_RC522_IRQ_GPIO_Port GPIOA
 #define RFID_RC522_IRQ_EXTI_IRQn EXTI0_IRQn
