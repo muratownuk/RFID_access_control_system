@@ -1,10 +1,5 @@
 # RFID Access Control System - STM32F411RE + FreeRTOS
 
-## Overview
-This project implements an **interrupt-driven RFID access control system** using the STM32F411RE Nucleo-64 board and the MFRC522 RFID-RC522 reader.
-
-The system is built with a **layered architecture** and **FreeRTOS-based multitasking**, demonstrating real-world embedded design patterns used in industry.
-
 ![System Demo](assets/rfid-access-control-system-gif-vid.gif)
 
 *Real-time access control demo: MFRC522 Card Scanning, FreeRTOS task handling and 12V solenoid actuation.*
@@ -14,6 +9,11 @@ The system is built with a **layered architecture** and **FreeRTOS-based multita
 [![Watch the Demo](assets/rfid-access-control-system-demo-thumbnail.jpg)](https://youtu.be/9td0cRvXmQ0)
 
 *Click the image above to watch the full demonstration of the project!*
+
+## Overview
+This project implements an **interrupt-driven RFID access control system** using the STM32F411RE Nucleo-64 board and the MFRC522 RFID-RC522 reader.
+
+The system is built with a **layered architecture** and **FreeRTOS-based multitasking**, demonstrating real-world embedded design patterns used in industry.
 
 ### Key Features
 - SPI-based communication with MFRC522 RFID-RC522 module
