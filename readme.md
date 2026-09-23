@@ -6,11 +6,13 @@ This project implements an **interrupt-driven RFID access control system** using
 The system is built with a **layered architecture** and **FreeRTOS-based multitasking**, demonstrating real-world embedded design patterns used in industry.
 
 ![System Demo](assets/rfid-access-control-system-gif-vid.gif)
+
 *Real-time access control demo: MFRC522 Card Scanning, FreeRTOS task handling and 12V solenoid actuation.*
 
 ## System Demo Video
 
 [![Watch the Demo](assets/rfid-access-control-system-demo-thumbnail.jpg)](https://youtu.be/9td0cRvXmQ0)
+
 *Click the image above to watch the full demonstration of the project!*
 
 ### Key Features
